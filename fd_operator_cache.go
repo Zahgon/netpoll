@@ -14,18 +14,7 @@
 
 package netpoll
 
-import (
-	"runtime"
-	"sync/atomic"
-	"unsafe"
-)
-
-func newOperatorCache() *operatorCache {
-	return &operatorCache{
-		cache:    make([]*FDOperator, 0, 1024),
-		freelist: make([]int32, 0, 1024),
-	}
-}
+func newOperatorCache() *operatorCache { _ = "STUB: not implemented"; return nil }
 
 type operatorCache struct {
 	first  *FDOperator
@@ -37,63 +26,18 @@ type operatorCache struct {
 	freelist   []int32
 }
 
-func (c *operatorCache) alloc() *FDOperator {
-	lock(&c.locked)
-	if c.first == nil {
-		const opSize = unsafe.Sizeof(FDOperator{})
-		n := block4k / opSize
-		if n == 0 {
-			n = 1
-		}
-		index := int32(len(c.cache))
-		for i := uintptr(0); i < n; i++ {
-			pd := &FDOperator{index: index}
-			c.cache = append(c.cache, pd)
-			pd.next = c.first
-			c.first = pd
-			index++
-		}
-	}
-	op := c.first
-	c.first = op.next
-	unlock(&c.locked)
-	return op
-}
+func (c *operatorCache) alloc() *FDOperator { _ = "STUB: not implemented"; return nil }
 
 // freeable mark the operator that could be freed
 // only poller could do the real free action
 func (c *operatorCache) freeable(op *FDOperator) {
+	_ = "STUB: not implemented"
 	// reset all state
-	op.unused()
-	op.reset()
-	lock(&c.freelocked)
-	c.freelist = append(c.freelist, op.index)
-	unlock(&c.freelocked)
+	return
 }
 
-func (c *operatorCache) free() {
-	lock(&c.freelocked)
-	defer unlock(&c.freelocked)
-	if len(c.freelist) == 0 {
-		return
-	}
+func (c *operatorCache) free() { _ = "STUB: not implemented"; return }
 
-	lock(&c.locked)
-	for _, idx := range c.freelist {
-		op := c.cache[idx]
-		op.next = c.first
-		c.first = op
-	}
-	c.freelist = c.freelist[:0]
-	unlock(&c.locked)
-}
+func lock(locked *int32) { _ = "STUB: not implemented"; return }
 
-func lock(locked *int32) {
-	for !atomic.CompareAndSwapInt32(locked, 0, 1) {
-		runtime.Gosched()
-	}
-}
-
-func unlock(locked *int32) {
-	atomic.StoreInt32(locked, 0)
-}
+func unlock(locked *int32) { _ = "STUB: not implemented"; return }

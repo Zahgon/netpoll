@@ -24,8 +24,6 @@ import (
 	"os"
 	"runtime"
 	"sync"
-
-	"github.com/cloudwego/netpoll/internal/runner"
 )
 
 var (
@@ -36,36 +34,14 @@ var (
 // Initialize the pollers actively. By default, it's lazy initialized.
 // It's safe to call it multi times.
 func Initialize() {
+	_ = "STUB: not implemented"
 	// The first call of Pick() will init pollers
-	_ = pollmanager.Pick()
+	return
 }
 
 // Configure the internal behaviors of netpoll.
 // Configure must called in init() function, because the poller will read some global variable after init() finished
-func Configure(config Config) (err error) {
-	if config.PollerNum > 0 {
-		if err = pollmanager.SetNumLoops(config.PollerNum); err != nil {
-			return err
-		}
-	}
-	if config.BufferSize > 0 {
-		defaultLinkBufferSize = config.BufferSize
-	}
-
-	if config.Runner != nil {
-		runner.RunTask = config.Runner
-	}
-	if config.LoggerOutput != nil {
-		logger = log.New(config.LoggerOutput, "", log.LstdFlags)
-	}
-	if config.LoadBalance >= 0 {
-		if err = pollmanager.SetLoadBalance(config.LoadBalance); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
+func Configure(config Config) (err error) { _ = "STUB: not implemented"; return nil }
 
 // SetNumLoops is used to set the number of pollers, generally do not need to actively set.
 // By default, the number of pollers is equal to runtime.GOMAXPROCS(0)/20+1.
@@ -80,55 +56,40 @@ func Configure(config Config) (err error) {
 //	}
 //
 // Deprecated: use Configure instead.
-func SetNumLoops(numLoops int) error {
-	return pollmanager.SetNumLoops(numLoops)
-}
+func SetNumLoops(numLoops int) error { _ = "STUB: not implemented"; return nil }
 
 // SetLoadBalance sets the load balancing method. Load balancing is always a best effort to attempt
 // to distribute the incoming connections between multiple polls.
 // This option only works when numLoops is set.
 // Deprecated: use Configure instead.
-func SetLoadBalance(lb LoadBalance) error {
-	return pollmanager.SetLoadBalance(lb)
-}
+func SetLoadBalance(lb LoadBalance) error { _ = "STUB: not implemented"; return nil }
 
 // SetLoggerOutput sets the logger output target.
 // Deprecated: use Configure instead.
-func SetLoggerOutput(w io.Writer) {
-	logger = log.New(w, "", log.LstdFlags)
-}
+func SetLoggerOutput(w io.Writer) { _ = "STUB: not implemented"; return }
 
 // SetRunner set the runner function for every OnRequest/OnConnect callback
 //
 // Deprecated: use Configure and specify config.Runner instead.
 func SetRunner(f func(ctx context.Context, f func())) {
-	runner.RunTask = f
+	_ = "STUB: not implemented"
+
+	// DisableGopool will remove gopool(the goroutine pool used to run OnRequest),
+	// which means that OnRequest will be run via `go OnRequest(...)`.
+	// Usually, OnRequest will cause stack expansion, which can be solved by reusing goroutine.
+	// But if you can confirm that the OnRequest will not cause stack expansion,
+	// it is recommended to use DisableGopool to reduce redundancy and improve performance.
+	//
+	// Deprecated: use Configure() and specify config.Runner instead.
+	return
 }
 
-// DisableGopool will remove gopool(the goroutine pool used to run OnRequest),
-// which means that OnRequest will be run via `go OnRequest(...)`.
-// Usually, OnRequest will cause stack expansion, which can be solved by reusing goroutine.
-// But if you can confirm that the OnRequest will not cause stack expansion,
-// it is recommended to use DisableGopool to reduce redundancy and improve performance.
-//
-// Deprecated: use Configure() and specify config.Runner instead.
-func DisableGopool() error {
-	runner.UseGoRunTask()
-	return nil
-}
+func DisableGopool() error { _ = "STUB: not implemented"; return nil }
 
 // NewEventLoop .
 func NewEventLoop(onRequest OnRequest, ops ...Option) (EventLoop, error) {
-	opts := &options{
-		onRequest: onRequest,
-	}
-	for _, do := range ops {
-		do.f(opts)
-	}
-	return &eventLoop{
-		opts: opts,
-		stop: make(chan error, 1),
-	}, nil
+	_ = "STUB: not implemented"
+	return *new(EventLoop), nil
 }
 
 type eventLoop struct {
@@ -139,44 +100,14 @@ type eventLoop struct {
 }
 
 // Serve implements EventLoop.
-func (evl *eventLoop) Serve(ln net.Listener) error {
-	npln, err := ConvertListener(ln)
-	if err != nil {
-		return err
-	}
-	evl.Lock()
-	evl.svr = newServer(npln, evl.opts, evl.quit)
-	evl.svr.Run()
-	evl.Unlock()
+func (evl *eventLoop) Serve(ln net.Listener) error { _ = "STUB: not implemented"; return nil }
 
-	err = evl.waitQuit()
-	// ensure evl will not be finalized until Serve returns
-	runtime.SetFinalizer(evl, nil)
-	return err
-}
+// ensure evl will not be finalized until Serve returns
 
 // Shutdown signals a shutdown a begins server closing.
-func (evl *eventLoop) Shutdown(ctx context.Context) error {
-	evl.Lock()
-	svr := evl.svr
-	evl.svr = nil
-	evl.Unlock()
-
-	if svr == nil {
-		return nil
-	}
-	evl.quit(nil)
-	return svr.Close(ctx)
-}
+func (evl *eventLoop) Shutdown(ctx context.Context) error { _ = "STUB: not implemented"; return nil }
 
 // waitQuit waits for a quit signal
-func (evl *eventLoop) waitQuit() error {
-	return <-evl.stop
-}
+func (evl *eventLoop) waitQuit() error { _ = "STUB: not implemented"; return nil }
 
-func (evl *eventLoop) quit(err error) {
-	select {
-	case evl.stop <- err:
-	default:
-	}
-}
+func (evl *eventLoop) quit(err error) { _ = "STUB: not implemented"; return }

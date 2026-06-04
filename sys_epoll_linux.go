@@ -29,19 +29,19 @@ type epollevent struct {
 // GetDataPtr returns a pointer to the 8-byte user data area of the epoll event.
 // The data area is used to store an FDOperator pointer for event dispatching.
 func (p *epollevent) GetDataPtr() unsafe.Pointer {
-	return unsafe.Pointer(&p.Fd) // Fd+Pad together form the 8-byte data area
+	_ = "STUB: not implemented"
+	return *new(unsafe.Pointer)
 }
 
-func convertEpollEventPtr(p *epollevent) *unix.EpollEvent {
-	return (*unix.EpollEvent)(unsafe.Pointer(p))
-}
+// Fd+Pad together form the 8-byte data area
+
+func convertEpollEventPtr(p *epollevent) *unix.EpollEvent { _ = "STUB: not implemented"; return nil }
 
 // EpollCreate implements epoll_create1.
-func EpollCreate(flag int) (fd int, err error) {
-	return unix.EpollCreate1(flag)
-}
+func EpollCreate(flag int) (fd int, err error) { _ = "STUB: not implemented"; return 0, nil }
 
 // EpollCtl implements epoll_ctl.
 func EpollCtl(epfd, op, fd int, event *epollevent) (err error) {
-	return unix.EpollCtl(epfd, op, fd, convertEpollEventPtr(event))
+	_ = "STUB: not implemented"
+	return nil
 }

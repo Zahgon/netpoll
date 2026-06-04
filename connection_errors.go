@@ -15,7 +15,6 @@
 package netpoll
 
 import (
-	"fmt"
 	"net"
 	"syscall"
 )
@@ -43,16 +42,7 @@ const (
 const ErrnoMask = 0xFF
 
 // wrap Errno, implement xerrors.Wrapper
-func Exception(err error, suffix string) error {
-	no, ok := err.(syscall.Errno)
-	if !ok {
-		if suffix == "" {
-			return err
-		}
-		return fmt.Errorf("%s %s", err.Error(), suffix)
-	}
-	return &exception{no: no, suffix: suffix}
-}
+func Exception(err error, suffix string) error { _ = "STUB: not implemented"; return nil }
 
 var _ net.Error = (*exception)(nil)
 
@@ -61,49 +51,17 @@ type exception struct {
 	suffix string
 }
 
-func (e *exception) Error() string {
-	var s string
-	if int(e.no)&0x100 != 0 {
-		s = errnos[int(e.no)&ErrnoMask]
-	}
-	if s == "" {
-		s = e.no.Error()
-	}
-	if e.suffix != "" {
-		s += " " + e.suffix
-	}
-	return s
-}
+func (e *exception) Error() string { _ = "STUB: not implemented"; return "" }
 
-func (e *exception) Is(target error) bool {
-	if e == target {
-		return true
-	}
-	if e.no == target {
-		return true
-	}
-	// TODO: ErrConnClosed contains ErrEOF
-	if e.no == ErrEOF && target == ErrConnClosed {
-		return true
-	}
-	return e.no.Is(target)
-}
+func (e *exception) Is(target error) bool { _ = "STUB: not implemented"; return false }
 
-func (e *exception) Unwrap() error {
-	return e.no
-}
+// TODO: ErrConnClosed contains ErrEOF
 
-func (e *exception) Timeout() bool {
-	switch e.no {
-	case ErrDialTimeout, ErrReadTimeout, ErrWriteTimeout:
-		return true
-	}
-	return e.no.Timeout()
-}
+func (e *exception) Unwrap() error { _ = "STUB: not implemented"; return nil }
 
-func (e *exception) Temporary() bool {
-	return e.no.Temporary()
-}
+func (e *exception) Timeout() bool { _ = "STUB: not implemented"; return false }
+
+func (e *exception) Temporary() bool { _ = "STUB: not implemented"; return false }
 
 // Errors defined in netpoll
 var errnos = [...]string{

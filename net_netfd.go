@@ -13,8 +13,6 @@ import (
 	"context"
 	"errors"
 	"net"
-	"os"
-	"runtime"
 	"syscall"
 	"time"
 )
@@ -47,126 +45,56 @@ type netFD struct {
 	detaching bool
 }
 
-func newNetFD(fd, family, sotype int, net string) *netFD {
-	ret := &netFD{}
-	ret.fd = fd
-	ret.network = net
-	ret.family = family
-	ret.sotype = sotype
-	ret.isStream = sotype == syscall.SOCK_STREAM
-	ret.zeroReadIsEOF = sotype != syscall.SOCK_DGRAM && sotype != syscall.SOCK_RAW
-	return ret
-}
+func newNetFD(fd, family, sotype int, net string) *netFD { _ = "STUB: not implemented"; return nil }
 
 // if dial connection error, you need exec netFD.Close actively
 func (c *netFD) dial(ctx context.Context, laddr, raddr sockaddr) (err error) {
-	var lsa syscall.Sockaddr
-	if laddr != nil {
-		if lsa, err = laddr.sockaddr(c.family); err != nil {
-			return err
-		} else if lsa != nil {
-			// bind local address
-			if err = syscall.Bind(c.fd, lsa); err != nil {
-				return os.NewSyscallError("bind", err)
-			}
-		}
-	}
-	var rsa syscall.Sockaddr  // remote address from the user
-	var crsa syscall.Sockaddr // remote address we actually connected to
-	if raddr != nil {
-		if rsa, err = raddr.sockaddr(c.family); err != nil {
-			return err
-		}
-	}
-	// remote address we actually connected to
-	if crsa, err = c.connect(ctx, lsa, rsa); err != nil {
-		return err
-	}
-	c.isConnected = true
-
-	// Record the local and remote addresses from the actual socket.
-	// Get the local address by calling Getsockname.
-	// For the remote address, use
-	// 1) the one returned by the connect method, if any; or
-	// 2) the one from Getpeername, if it succeeds; or
-	// 3) the one passed to us as the raddr parameter.
-	lsa, _ = syscall.Getsockname(c.fd)
-	c.localAddr = sockaddrToAddr(lsa)
-	if crsa != nil {
-		c.remoteAddr = sockaddrToAddr(crsa)
-	} else if crsa, _ = syscall.Getpeername(c.fd); crsa != nil {
-		c.remoteAddr = sockaddrToAddr(crsa)
-	} else {
-		c.remoteAddr = sockaddrToAddr(rsa)
-	}
+	_ = "STUB: not implemented"
 	return nil
 }
 
+// bind local address
+
+// remote address from the user
+// remote address we actually connected to
+
+// remote address we actually connected to
+
+// Record the local and remote addresses from the actual socket.
+// Get the local address by calling Getsockname.
+// For the remote address, use
+// 1) the one returned by the connect method, if any; or
+// 2) the one from Getpeername, if it succeeds; or
+// 3) the one passed to us as the raddr parameter.
+
 func (c *netFD) connect(ctx context.Context, la, ra syscall.Sockaddr) (rsa syscall.Sockaddr, retErr error) {
+	_ = "STUB: not implemented"
 	// Do not need to call c.writing here,
 	// because c is not yet accessible to user,
 	// so no concurrent operations are possible.
-	switch err := syscall.Connect(c.fd, ra); err {
-	case syscall.EINPROGRESS, syscall.EALREADY, syscall.EINTR:
-	case nil, syscall.EISCONN:
-		select {
-		case <-ctx.Done():
-			return nil, mapErr(ctx.Err())
-		default:
-		}
-		return nil, nil
-	case syscall.EINVAL:
-		// On Solaris we can see EINVAL if the socket has
-		// already been accepted and closed by the server.
-		// Treat this as a successful connection--writes to
-		// the socket will see EOF.  For details and a test
-		// case in C see https://golang.org/issue/6828.
-		if runtime.GOOS == "solaris" {
-			return nil, nil
-		}
-		fallthrough
-	default:
-		return nil, os.NewSyscallError("connect", err)
-	}
-
-	c.pd = newPollDesc(c.fd)
-	defer func() {
-		// free operator to avoid leak
-		c.pd.operator.Free()
-		c.pd = nil
-	}()
-	for {
-		// Performing multiple connect system calls on a
-		// non-blocking socket under Unix variants does not
-		// necessarily result in earlier errors being
-		// returned. Instead, once runtime-integrated network
-		// poller tells us that the socket is ready, get the
-		// SO_ERROR socket option to see if the connection
-		// succeeded or failed. See issue 7474 for further
-		// details.
-		if err := c.pd.WaitWrite(ctx); err != nil {
-			return nil, err
-		}
-		nerr, err := syscall.GetsockoptInt(c.fd, syscall.SOL_SOCKET, syscall.SO_ERROR)
-		if err != nil {
-			return nil, os.NewSyscallError("getsockopt", err)
-		}
-		switch err := syscall.Errno(nerr); err {
-		case syscall.EINPROGRESS, syscall.EALREADY, syscall.EINTR:
-		case syscall.EISCONN:
-			return nil, nil
-		case syscall.Errno(0):
-			// The runtime poller can wake us up spuriously;
-			// see issues 14548 and 19289. Check that we are
-			// really connected; if not, wait again.
-			if rsa, err := syscall.Getpeername(c.fd); err == nil {
-				return rsa, nil
-			}
-		default:
-			return nil, os.NewSyscallError("connect", err)
-		}
-	}
+	return *new(syscall.Sockaddr), nil
 }
+
+// On Solaris we can see EINVAL if the socket has
+// already been accepted and closed by the server.
+// Treat this as a successful connection--writes to
+// the socket will see EOF.  For details and a test
+// case in C see https://golang.org/issue/6828.
+
+// free operator to avoid leak
+
+// Performing multiple connect system calls on a
+// non-blocking socket under Unix variants does not
+// necessarily result in earlier errors being
+// returned. Instead, once runtime-integrated network
+// poller tells us that the socket is ready, get the
+// SO_ERROR socket option to see if the connection
+// succeeded or failed. See issue 7474 for further
+// details.
+
+// The runtime poller can wake us up spuriously;
+// see issues 14548 and 19289. Check that we are
+// really connected; if not, wait again.
 
 // Various errors contained in OpError.
 var (
@@ -180,13 +108,4 @@ var (
 //
 // TODO(bradfitz): get rid of this after adjusting tests and making
 // context.DeadlineExceeded implement net.Error?
-func mapErr(err error) error {
-	switch err {
-	case context.Canceled:
-		return errCanceled
-	case context.DeadlineExceeded:
-		return errIOTimeout
-	default:
-		return err
-	}
-}
+func mapErr(err error) error { _ = "STUB: not implemented"; return nil }

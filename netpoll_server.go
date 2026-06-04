@@ -18,20 +18,13 @@ package netpoll
 
 import (
 	"context"
-	"errors"
-	"strings"
 	"sync"
-	"syscall"
-	"time"
 )
 
 // newServer wrap listener into server, quit will be invoked when server exit.
 func newServer(ln Listener, opts *options, onQuit func(err error)) *server {
-	return &server{
-		ln:     ln,
-		opts:   opts,
-		onQuit: onQuit,
-	}
+	_ = "STUB: not implemented"
+	return nil
 }
 
 type server struct {
@@ -43,141 +36,49 @@ type server struct {
 }
 
 // Run this server.
-func (s *server) Run() (err error) {
-	s.operator = FDOperator{
-		FD:     s.ln.Fd(),
-		OnRead: s.OnRead,
-		OnHup:  s.OnHup,
-	}
-	s.operator.poll = pollmanager.Pick()
-	err = s.operator.Control(PollReadable)
-	if err != nil {
-		s.onQuit(err)
-	}
-	return err
-}
+func (s *server) Run() (err error) { _ = "STUB: not implemented"; return nil }
 
 // Close this server with deadline.
-func (s *server) Close(ctx context.Context) error {
-	s.operator.Control(PollDetach)
-	s.ln.Close()
+func (s *server) Close(ctx context.Context) error { _ = "STUB: not implemented"; return nil }
 
-	for {
-		activeConn := 0
-		s.connections.Range(func(key, value interface{}) bool {
-			conn, ok := value.(gracefulExit)
-			if !ok || conn.isIdle() {
-				value.(Connection).Close()
-			} else {
-				activeConn++
-			}
-			return true
-		})
-		if activeConn == 0 { // all connections have been closed
-			return nil
-		}
+// all connections have been closed
 
-		// smart control graceful shutdown check internal
-		// we should wait for more time if there are more active connections
-		waitTime := time.Millisecond * time.Duration(activeConn)
-		if waitTime > time.Second { // max wait time is 1000 ms
-			waitTime = time.Millisecond * 1000
-		} else if waitTime < time.Millisecond*50 { // min wait time is 50 ms
-			waitTime = time.Millisecond * 50
-		}
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(waitTime):
-			continue
-		}
-	}
-}
+// smart control graceful shutdown check internal
+// we should wait for more time if there are more active connections
+
+// max wait time is 1000 ms
+
+// min wait time is 50 ms
 
 // OnRead implements FDOperator.
 func (s *server) OnRead(p Poll) error {
+	_ = "STUB: not implemented"
 	// accept socket
-	conn, err := s.ln.Accept()
-	if err == nil {
-		if conn != nil {
-			s.onAccept(conn.(Conn))
-		}
-		// EAGAIN | EWOULDBLOCK if conn and err both nil
-		return nil
-	}
-	logger.Printf("NETPOLL: accept conn failed: %v", err)
-
-	// delay accept when too many open files
-	if isOutOfFdErr(err) {
-		// since we use Epoll LT, we have to detach listener fd from epoll first
-		// and re-register it when accept successfully or there is no available connection
-		cerr := s.operator.Control(PollDetach)
-		if cerr != nil {
-			logger.Printf("NETPOLL: detach listener fd failed: %v", cerr)
-			return err
-		}
-		go func() {
-			retryTimes := []time.Duration{0, 10, 50, 100, 200, 500, 1000} // ms
-			retryTimeIndex := 0
-			for {
-				if retryTimeIndex > 0 {
-					time.Sleep(retryTimes[retryTimeIndex] * time.Millisecond)
-				}
-				conn, err := s.ln.Accept()
-				if err == nil {
-					if conn == nil {
-						// recovery accept poll loop
-						s.operator.Control(PollReadable)
-						return
-					}
-					s.onAccept(conn.(Conn))
-					logger.Println("NETPOLL: re-accept conn success:", conn.RemoteAddr())
-					retryTimeIndex = 0
-					continue
-				}
-				if retryTimeIndex+1 < len(retryTimes) {
-					retryTimeIndex++
-				}
-				logger.Printf("NETPOLL: re-accept conn failed, err=[%s] and next retrytime=%dms", err.Error(), retryTimes[retryTimeIndex])
-			}
-		}()
-	}
-
-	// shut down
-	if strings.Contains(err.Error(), "closed") {
-		s.operator.Control(PollDetach)
-		s.onQuit(err)
-		return err
-	}
-
-	return err
-}
-
-// OnHup implements FDOperator.
-func (s *server) OnHup(p Poll) error {
-	s.onQuit(errors.New("listener close"))
 	return nil
 }
 
+// EAGAIN | EWOULDBLOCK if conn and err both nil
+
+// delay accept when too many open files
+
+// since we use Epoll LT, we have to detach listener fd from epoll first
+// and re-register it when accept successfully or there is no available connection
+
+// ms
+
+// recovery accept poll loop
+
+// shut down
+
+// OnHup implements FDOperator.
+func (s *server) OnHup(p Poll) error { _ = "STUB: not implemented"; return nil }
+
 func (s *server) onAccept(conn Conn) {
+	_ = "STUB: not implemented"
 	// store & register connection
-	nconn := new(connection)
-	nconn.init(conn, s.opts)
-	if !nconn.IsActive() {
-		return
-	}
-	fd := conn.Fd()
-	nconn.AddCloseCallback(func(connection Connection) error {
-		s.connections.Delete(fd)
-		return nil
-	})
-	s.connections.Store(fd, nconn)
-
-	// trigger onConnect asynchronously
-	nconn.onConnect()
+	return
 }
 
-func isOutOfFdErr(err error) bool {
-	se, ok := err.(syscall.Errno)
-	return ok && (se == syscall.EMFILE || se == syscall.ENFILE)
-}
+// trigger onConnect asynchronously
+
+func isOutOfFdErr(err error) bool { _ = "STUB: not implemented"; return false }

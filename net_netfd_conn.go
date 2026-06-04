@@ -18,9 +18,6 @@ package netpoll
 
 import (
 	"net"
-	"strings"
-	"sync/atomic"
-	"syscall"
 	"time"
 )
 
@@ -28,78 +25,44 @@ var _ Conn = &netFD{}
 
 // Fd implements Conn.
 func (c *netFD) Fd() (fd int) {
-	return c.fd
+	_ = "STUB: not implemented"
+
+	// Read implements Conn.
+	return 0
 }
 
-// Read implements Conn.
-func (c *netFD) Read(b []byte) (n int, err error) {
-	n, err = syscall.Read(c.fd, b)
-	if err != nil {
-		if err == syscall.EAGAIN || err == syscall.EINTR {
-			return 0, nil
-		}
-	}
-	return n, err
-}
+func (c *netFD) Read(b []byte) (n int, err error) { _ = "STUB: not implemented"; return 0, nil }
 
 // Write implements Conn.
-func (c *netFD) Write(b []byte) (n int, err error) {
-	n, err = syscall.Write(c.fd, b)
-	if err != nil {
-		if err == syscall.EAGAIN {
-			return 0, nil
-		}
-	}
-	return n, err
-}
+func (c *netFD) Write(b []byte) (n int, err error) { _ = "STUB: not implemented"; return 0, nil }
 
 // Close will be executed only once.
-func (c *netFD) Close() (err error) {
-	if atomic.AddUint32(&c.closed, 1) != 1 {
-		return nil
-	}
-	if !c.detaching && c.fd > 2 {
-		err = syscall.Close(c.fd)
-		if err != nil {
-			logger.Printf("NETPOLL: netFD[%d] close error: %s", c.fd, err.Error())
-		}
-	}
-	return err
-}
+func (c *netFD) Close() (err error) { _ = "STUB: not implemented"; return nil }
 
 // LocalAddr implements Conn.
 func (c *netFD) LocalAddr() (addr net.Addr) {
-	return c.localAddr
+	_ = "STUB: not implemented"
+
+	// RemoteAddr implements Conn.
+	return *new(net.Addr)
 }
 
-// RemoteAddr implements Conn.
 func (c *netFD) RemoteAddr() (addr net.Addr) {
-	return c.remoteAddr
+	_ = "STUB: not implemented"
+	return *
+
+	// SetKeepAlive implements Conn.
+	// TODO: only tcp conn is ok.
+	new(net.Addr)
 }
 
-// SetKeepAlive implements Conn.
-// TODO: only tcp conn is ok.
-func (c *netFD) SetKeepAlive(second int) error {
-	if !strings.HasPrefix(c.network, "tcp") {
-		return nil
-	}
-	if second > 0 {
-		return SetKeepAlive(c.fd, second)
-	}
-	return nil
-}
+func (c *netFD) SetKeepAlive(second int) error { _ = "STUB: not implemented"; return nil }
 
 // SetDeadline implements Conn.
-func (c *netFD) SetDeadline(t time.Time) error {
-	return Exception(ErrUnsupported, "SetDeadline")
-}
+func (c *netFD) SetDeadline(t time.Time) error { _ = "STUB: not implemented"; return nil }
 
 // SetReadDeadline implements Conn.
-func (c *netFD) SetReadDeadline(t time.Time) error {
-	return Exception(ErrUnsupported, "SetReadDeadline")
-}
+func (c *netFD) SetReadDeadline(t time.Time) error { _ = "STUB: not implemented"; return nil }
 
 // SetWriteDeadline implements Conn.
-func (c *netFD) SetWriteDeadline(t time.Time) error {
-	return Exception(ErrUnsupported, "SetWriteDeadline")
-}
+func (c *netFD) SetWriteDeadline(t time.Time) error { _ = "STUB: not implemented"; return nil }

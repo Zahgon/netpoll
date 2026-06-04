@@ -16,24 +16,11 @@
 
 package netpoll
 
-import (
-	"syscall"
-	"unsafe"
-)
-
 // EpollWait implements epoll_wait.
 func EpollWait(epfd int, events []epollevent, msec int) (n int, err error) {
-	var r0 uintptr
-	_p0 := unsafe.Pointer(&events[0])
-	if msec == 0 {
-		// When timeout is 0 (non-blocking poll), use RawSyscall6 to avoid the overhead
-		// of scheduler coordination (entersyscall/exitsyscall) since it won't block.
-		r0, _, err = syscall.RawSyscall6(syscall.SYS_EPOLL_WAIT, uintptr(epfd), uintptr(_p0), uintptr(len(events)), 0, 0, 0)
-	} else {
-		r0, _, err = syscall.Syscall6(syscall.SYS_EPOLL_WAIT, uintptr(epfd), uintptr(_p0), uintptr(len(events)), uintptr(msec), 0, 0)
-	}
-	if err == syscall.Errno(0) {
-		err = nil
-	}
-	return int(r0), err
+	_ = "STUB: not implemented"
+	return 0, nil
 }
+
+// When timeout is 0 (non-blocking poll), use RawSyscall6 to avoid the overhead
+// of scheduler coordination (entersyscall/exitsyscall) since it won't block.

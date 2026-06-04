@@ -32,43 +32,22 @@ type options struct {
 }
 
 // WithOnPrepare registers the OnPrepare method to EventLoop.
-func WithOnPrepare(onPrepare OnPrepare) Option {
-	return Option{func(op *options) {
-		op.onPrepare = onPrepare
-	}}
-}
+func WithOnPrepare(onPrepare OnPrepare) Option { _ = "STUB: not implemented"; return *new(Option) }
 
 // WithOnConnect registers the OnConnect method to EventLoop.
-func WithOnConnect(onConnect OnConnect) Option {
-	return Option{func(op *options) {
-		op.onConnect = onConnect
-	}}
-}
+func WithOnConnect(onConnect OnConnect) Option { _ = "STUB: not implemented"; return *new(Option) }
 
 // WithOnDisconnect registers the OnDisconnect method to EventLoop.
 func WithOnDisconnect(onDisconnect OnDisconnect) Option {
-	return Option{func(op *options) {
-		op.onDisconnect = onDisconnect
-	}}
+	_ = "STUB: not implemented"
+	return *new(Option)
 }
 
 // WithReadTimeout sets the read timeout of connections.
-func WithReadTimeout(timeout time.Duration) Option {
-	return Option{func(op *options) {
-		op.readTimeout = timeout
-	}}
-}
+func WithReadTimeout(timeout time.Duration) Option { _ = "STUB: not implemented"; return *new(Option) }
 
 // WithWriteTimeout sets the write timeout of connections.
-func WithWriteTimeout(timeout time.Duration) Option {
-	return Option{func(op *options) {
-		op.writeTimeout = timeout
-	}}
-}
+func WithWriteTimeout(timeout time.Duration) Option { _ = "STUB: not implemented"; return *new(Option) }
 
 // WithIdleTimeout sets the idle timeout of connections.
-func WithIdleTimeout(timeout time.Duration) Option {
-	return Option{func(op *options) {
-		op.idleTimeout = timeout
-	}}
-}
+func WithIdleTimeout(timeout time.Duration) Option { _ = "STUB: not implemented"; return *new(Option) }

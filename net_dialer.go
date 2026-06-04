@@ -24,7 +24,8 @@ import (
 
 // DialConnection is a default implementation of Dialer.
 func DialConnection(network, address string, timeout time.Duration) (connection Connection, err error) {
-	return defaultDialer.DialConnection(network, address, timeout)
+	_ = "STUB: not implemented"
+	return *new(Connection), nil
 }
 
 // NewFDConnection create a Connection initialized by any fd
@@ -35,18 +36,12 @@ func DialConnection(network, address string, timeout time.Duration) (connection 
 //	rconn, _ = netpoll.NewFDConnection(rfd)
 //	wconn, _ = netpoll.NewFDConnection(wfd)
 func NewFDConnection(fd int) (Connection, error) {
-	conn := new(connection)
-	err := conn.init(&netFD{fd: fd}, nil)
-	if err != nil {
-		return nil, err
-	}
-	return conn, nil
+	_ = "STUB: not implemented"
+	return *new(Connection), nil
 }
 
 // NewDialer only support TCP and unix socket now.
-func NewDialer() Dialer {
-	return &dialer{}
-}
+func NewDialer() Dialer { _ = "STUB: not implemented"; return *new(Dialer) }
 
 var defaultDialer = NewDialer()
 
@@ -54,83 +49,26 @@ type dialer struct{}
 
 // DialTimeout implements Dialer.
 func (d *dialer) DialTimeout(network, address string, timeout time.Duration) (net.Conn, error) {
-	return d.DialConnection(network, address, timeout)
+	_ = "STUB: not implemented"
+	return *new(net.Conn), nil
 }
 
 // DialConnection implements Dialer.
 func (d *dialer) DialConnection(network, address string, timeout time.Duration) (connection Connection, err error) {
-	ctx := context.Background()
-	if timeout > 0 {
-		subCtx, cancel := context.WithTimeout(ctx, timeout)
-		defer cancel()
-		ctx = subCtx
-	}
-
-	switch network {
-	case "tcp", "tcp4", "tcp6":
-		return d.dialTCP(ctx, network, address)
-	case "unix", "unixgram", "unixpacket":
-		raddr := &UnixAddr{
-			UnixAddr: net.UnixAddr{Name: address, Net: network},
-		}
-		return DialUnix(network, nil, raddr)
-	default:
-		return nil, net.UnknownNetworkError(network)
-	}
+	_ = "STUB: not implemented"
+	return *new(Connection), nil
 }
 
 func (d *dialer) dialTCP(ctx context.Context, network, address string) (connection *TCPConnection, err error) {
-	host, port, err := net.SplitHostPort(address)
-	if err != nil {
-		return nil, err
-	}
-	var portnum int
-	if portnum, err = net.DefaultResolver.LookupPort(ctx, network, port); err != nil {
-		return nil, err
-	}
-	var ipaddrs []net.IPAddr
-	// host maybe empty if address is :12345
-	if host == "" {
-		ipaddrs = []net.IPAddr{{}}
-	} else {
-		ipaddrs, err = net.DefaultResolver.LookupIPAddr(ctx, host)
-		if err != nil {
-			return nil, err
-		}
-		if len(ipaddrs) == 0 {
-			return nil, &net.DNSError{Err: "no such host", Name: host, IsNotFound: true}
-		}
-	}
-
-	var firstErr error // The error from the first address is most relevant.
-	tcpAddr := &TCPAddr{}
-	for _, ipaddr := range ipaddrs {
-		tcpAddr.IP = ipaddr.IP
-		tcpAddr.Port = portnum
-		tcpAddr.Zone = ipaddr.Zone
-		if ipaddr.IP != nil && ipaddr.IP.To4() == nil {
-			connection, err = DialTCP(ctx, "tcp6", nil, tcpAddr)
-		} else {
-			connection, err = DialTCP(ctx, "tcp", nil, tcpAddr)
-		}
-		if err == nil {
-			return connection, nil
-		}
-		select {
-		case <-ctx.Done(): // check timeout error
-			return nil, err
-		default:
-		}
-		if firstErr == nil {
-			firstErr = err
-		}
-	}
-
-	if firstErr == nil {
-		firstErr = &net.OpError{Op: "dial", Net: network, Source: nil, Addr: nil, Err: errMissingAddress}
-	}
-	return nil, firstErr
+	_ = "STUB: not implemented"
+	return nil, nil
 }
+
+// host maybe empty if address is :12345
+
+// The error from the first address is most relevant.
+
+// check timeout error
 
 // sysDialer contains a Dial's parameters and configuration.
 type sysDialer struct {

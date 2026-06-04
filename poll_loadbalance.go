@@ -14,12 +14,6 @@
 
 package netpoll
 
-import (
-	"sync/atomic"
-
-	"github.com/bytedance/gopkg/lang/fastrand"
-)
-
 // LoadBalance sets the load balancing method.
 type LoadBalance int
 
@@ -41,40 +35,24 @@ type loadbalance interface {
 }
 
 func newLoadbalance(lb LoadBalance, polls []Poll) loadbalance {
-	switch lb {
-	case RoundRobin:
-		return newRoundRobinLB(polls)
-	case Random:
-		return newRandomLB(polls)
-	}
-	return newRoundRobinLB(polls)
+	_ = "STUB: not implemented"
+	return *new(loadbalance)
 }
 
-func newRandomLB(polls []Poll) loadbalance {
-	return &randomLB{polls: polls, pollSize: len(polls)}
-}
+func newRandomLB(polls []Poll) loadbalance { _ = "STUB: not implemented"; return *new(loadbalance) }
 
 type randomLB struct {
 	polls    []Poll
 	pollSize int
 }
 
-func (b *randomLB) LoadBalance() LoadBalance {
-	return Random
-}
+func (b *randomLB) LoadBalance() LoadBalance { _ = "STUB: not implemented"; return *new(LoadBalance) }
 
-func (b *randomLB) Pick() (poll Poll) {
-	idx := fastrand.Intn(b.pollSize)
-	return b.polls[idx]
-}
+func (b *randomLB) Pick() (poll Poll) { _ = "STUB: not implemented"; return *new(Poll) }
 
-func (b *randomLB) Rebalance(polls []Poll) {
-	b.polls, b.pollSize = polls, len(polls)
-}
+func (b *randomLB) Rebalance(polls []Poll) { _ = "STUB: not implemented"; return }
 
-func newRoundRobinLB(polls []Poll) loadbalance {
-	return &roundRobinLB{polls: polls, pollSize: len(polls)}
-}
+func newRoundRobinLB(polls []Poll) loadbalance { _ = "STUB: not implemented"; return *new(loadbalance) }
 
 type roundRobinLB struct {
 	polls    []Poll
@@ -83,14 +61,10 @@ type roundRobinLB struct {
 }
 
 func (b *roundRobinLB) LoadBalance() LoadBalance {
-	return RoundRobin
+	_ = "STUB: not implemented"
+	return *new(LoadBalance)
 }
 
-func (b *roundRobinLB) Pick() (poll Poll) {
-	idx := int(atomic.AddUintptr(&b.accepted, 1)) % b.pollSize
-	return b.polls[idx]
-}
+func (b *roundRobinLB) Pick() (poll Poll) { _ = "STUB: not implemented"; return *new(Poll) }
 
-func (b *roundRobinLB) Rebalance(polls []Poll) {
-	b.polls, b.pollSize = polls, len(polls)
-}
+func (b *roundRobinLB) Rebalance(polls []Poll) { _ = "STUB: not implemented"; return }

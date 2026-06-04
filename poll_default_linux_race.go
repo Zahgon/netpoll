@@ -24,19 +24,13 @@ type eventdata struct {
 }
 
 func (p *defaultPoll) getOperator(fd int, ptr unsafe.Pointer) *FDOperator {
-	data := *(*eventdata)(ptr)
-	tmp, _ := p.m.Load(int(data.fd))
-	if tmp == nil {
-		return nil
-	}
-	return tmp.(*FDOperator)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 func (p *defaultPoll) setOperator(ptr unsafe.Pointer, operator *FDOperator) {
-	*(*eventdata)(ptr) = eventdata{fd: int32(operator.FD)}
-	p.m.Store(operator.FD, operator)
+	_ = "STUB: not implemented"
+	return
 }
 
-func (p *defaultPoll) delOperator(operator *FDOperator) {
-	p.m.Delete(operator.FD)
-}
+func (p *defaultPoll) delOperator(operator *FDOperator) { _ = "STUB: not implemented"; return }

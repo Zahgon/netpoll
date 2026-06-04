@@ -15,14 +15,8 @@
 package netpoll
 
 import (
-	"bytes"
 	"errors"
-	"fmt"
 	"sync"
-	"sync/atomic"
-	"unsafe"
-
-	"github.com/bytedance/gopkg/lang/dirtmake"
 )
 
 // BinaryInplaceThreshold marks the minimum value of the nocopy slice length,
@@ -40,16 +34,7 @@ var (
 )
 
 // NewLinkBuffer size defines the initial capacity, but there is no readable data.
-func NewLinkBuffer(size ...int) *LinkBuffer {
-	buf := &LinkBuffer{}
-	var l int
-	if len(size) > 0 {
-		l = size[0]
-	}
-	node := newLinkBufferNode(l)
-	buf.head, buf.read, buf.flush, buf.write = node, node, node, node
-	return buf
-}
+func NewLinkBuffer(size ...int) *LinkBuffer { _ = "STUB: not implemented"; return nil }
 
 // UnsafeLinkBuffer implements ReadWriter.
 type UnsafeLinkBuffer struct {
@@ -70,15 +55,10 @@ type UnsafeLinkBuffer struct {
 }
 
 // Len implements Reader.
-func (b *UnsafeLinkBuffer) Len() int {
-	l := atomic.LoadInt64(&b.length)
-	return int(l)
-}
+func (b *UnsafeLinkBuffer) Len() int { _ = "STUB: not implemented"; return 0 }
 
 // IsEmpty check if this LinkBuffer is empty.
-func (b *UnsafeLinkBuffer) IsEmpty() (ok bool) {
-	return b.Len() == 0
-}
+func (b *UnsafeLinkBuffer) IsEmpty() (ok bool) { _ = "STUB: not implemented"; return false }
 
 // ------------------------------------------ implement copy reader ------------------------------------------
 
@@ -86,287 +66,125 @@ func (b *UnsafeLinkBuffer) IsEmpty() (ok bool) {
 // the underlying buffer to user code (flagReadExposed is not set).
 // After copying, it releases consumed nodes where readExposed is false.
 // Nodes with readExposed are left for the next Release call.
-func (b *UnsafeLinkBuffer) readCopy(p []byte) (n int) {
-	l := len(p)
-	if l == 0 || b.Len() == 0 {
-		return 0
-	}
-	if has := b.Len(); has < l {
-		l = has
-	}
-	b.recalLen(-l)
+func (b *UnsafeLinkBuffer) readCopy(p []byte) (n int) { _ = "STUB: not implemented"; return 0 }
 
-	// copy from nodes
-	for ack := l; ack > 0; {
-		if b.read.Len() == 0 {
-			b.read = b.read.next
-			continue
-		}
-		rd := b.read.Len()
-		if rd >= ack {
-			n += copy(p[n:], b.read.buf[b.read.off:b.read.off+ack])
-			b.read.off += ack
-			break
-		}
-		n += copy(p[n:], b.read.buf[b.read.off:])
-		ack -= rd
-		b.read = b.read.next
-	}
+// copy from nodes
 
-	// advance read past empty nodes
-	for b.read != b.flush && b.read.Len() == 0 {
-		b.read = b.read.next
-	}
-	// release consumed nodes that are not readExposed.
-	// exposed nodes stay in the chain so Release() can free them later.
-	//
-	// Example: [exposed/consumed] → [not-exposed/consumed] → [read/partial]
-	// After:   head → [exposed] → [read/partial]
-	//          the middle node is detached and released.
-	var prev *linkBufferNode
-	newHead := b.read
-	for cur := b.head; cur != b.read; {
-		next := cur.next
-		if cur.readExposed() {
-			if prev == nil {
-				newHead = cur
-			}
-			prev = cur
-		} else {
-			cur.Release()
-			if prev != nil {
-				prev.next = next
-			}
-		}
-		cur = next
-	}
-	b.head = newHead
-	return n
-}
+// advance read past empty nodes
+
+// release consumed nodes that are not readExposed.
+// exposed nodes stay in the chain so Release() can free them later.
+//
+// Example: [exposed/consumed] → [not-exposed/consumed] → [read/partial]
+// After:   head → [exposed] → [read/partial]
+//          the middle node is detached and released.
 
 // ------------------------------------------ implement zero-copy reader ------------------------------------------
 
 // Next implements Reader.
 func (b *UnsafeLinkBuffer) Next(n int) (p []byte, err error) {
-	if n <= 0 {
-		return
-	}
-	// check whether enough or not.
-	if b.Len() < n {
-		return p, fmt.Errorf("link buffer next[%d] not enough", n)
-	}
-	b.recalLen(-n) // re-cal length
+	_ = "STUB: not implemented"
+	return nil,
 
-	// single node
-	if b.isSingleNode(n) {
-		b.read.setFlag(flagReadExposed)
-		return b.read.Next(n), nil
-	}
-	// multiple nodes
-	var pIdx int
-	if block1k < n && n <= mallocMax {
-		p = malloc(n, n)
-		b.caches = append(b.caches, p)
-	} else {
-		p = dirtmake.Bytes(n, n)
-	}
-	var l int
-	for ack := n; ack > 0; ack = ack - l {
-		l = b.read.Len()
-		if l >= ack {
-			pIdx += copy(p[pIdx:], b.read.Next(ack))
-			break
-		} else if l > 0 {
-			pIdx += copy(p[pIdx:], b.read.Next(l))
-		}
-		b.read = b.read.next
-	}
-	_ = pIdx
-	return p, nil
+		// check whether enough or not.
+		nil
 }
+
+// re-cal length
+
+// single node
+
+// multiple nodes
 
 // Peek does not have an independent lifecycle, and there is no signal to
 // indicate that Peek content can be released, so Peek will not introduce mcache for now.
 func (b *UnsafeLinkBuffer) Peek(n int) (p []byte, err error) {
-	if n <= 0 {
-		return
-	}
-	// check whether enough or not.
-	if b.Len() < n {
-		return p, fmt.Errorf("link buffer peek[%d] not enough", n)
-	}
-	// single node
-	if b.isSingleNode(n) {
-		b.read.setFlag(flagReadExposed)
-		return b.read.Peek(n), nil
-	}
+	_ = "STUB: not implemented"
+	return nil,
 
-	// multiple nodes
-
-	// try to make use of the cap of b.cachePeek, if can't, free it.
-	if b.cachePeek != nil && cap(b.cachePeek) < n {
-		free(b.cachePeek)
-		b.cachePeek = nil
-	}
-	if b.cachePeek == nil {
-		b.cachePeek = malloc(0, n) // init with zero len, will append later
-	}
-	p = b.cachePeek
-	if len(p) >= n {
-		// in case we peek smaller than last time,
-		// we can return cache data directly.
-		// we will reset cachePeek when Next or Skip, no worries about stale data
-		return p[:n], nil
-	}
-
-	// How it works >>>>>>
-	// [ -------- node0 -------- ][ --------- node1 --------- ]  <- b.read
-	// [ --------------- p --------------- ]
-	//                                     ^ len(p)     ^ n here
-	//                           ^ scanned
-	// `scanned` var is the len of last nodes which we scanned and already copied to p
-	// `len(p) - scanned` is the start pos of current node for p to copy from
-	// `n - len(p)` is the len of bytes we're going to append to p
-	// 		we copy `len(node1)` - `len(p) - scanned` bytes in case node1 doesn't have enough data
-	for scanned, node := 0, b.read; len(p) < n; node = node.next {
-		l := node.Len()
-		if scanned+l <= len(p) { // already copied in p, skip
-			scanned += l
-			continue
-		}
-		start := len(p) - scanned // `start` must be smaller than l coz `scanned+l <= len(p)` is false
-		copyn := n - len(p)
-		if nodeLeftN := l - start; copyn > nodeLeftN {
-			copyn = nodeLeftN
-		}
-		p = append(p, node.Peek(l)[start:start+copyn]...)
-		scanned += l
-	}
-	b.cachePeek = p
-	return p[:n], nil
+		// check whether enough or not.
+		nil
 }
+
+// single node
+
+// multiple nodes
+
+// try to make use of the cap of b.cachePeek, if can't, free it.
+
+// init with zero len, will append later
+
+// in case we peek smaller than last time,
+// we can return cache data directly.
+// we will reset cachePeek when Next or Skip, no worries about stale data
+
+// How it works >>>>>>
+// [ -------- node0 -------- ][ --------- node1 --------- ]  <- b.read
+// [ --------------- p --------------- ]
+//                                     ^ len(p)     ^ n here
+//                           ^ scanned
+// `scanned` var is the len of last nodes which we scanned and already copied to p
+// `len(p) - scanned` is the start pos of current node for p to copy from
+// `n - len(p)` is the len of bytes we're going to append to p
+// 		we copy `len(node1)` - `len(p) - scanned` bytes in case node1 doesn't have enough data
+
+// already copied in p, skip
+
+// `start` must be smaller than l coz `scanned+l <= len(p)` is false
 
 // Skip implements Reader.
-func (b *UnsafeLinkBuffer) Skip(n int) (err error) {
-	if n <= 0 {
-		return
-	}
-	// check whether enough or not.
-	if b.Len() < n {
-		return fmt.Errorf("link buffer skip[%d] not enough", n)
-	}
-	b.recalLen(-n) // re-cal length
+func (b *UnsafeLinkBuffer) Skip(n int) (err error) { _ = "STUB: not implemented"; return nil }
 
-	var l int
-	for ack := n; ack > 0; ack = ack - l {
-		l = b.read.Len()
-		if l >= ack {
-			b.read.off += ack
-			break
-		}
-		b.read = b.read.next
-	}
-	return nil
-}
+// check whether enough or not.
+
+// re-cal length
 
 // Release the node that has been read.
 // b.flush == nil indicates that this LinkBuffer is created by LinkBuffer.Slice
-func (b *UnsafeLinkBuffer) Release() (err error) {
-	for b.read != b.flush && b.read.Len() == 0 {
-		b.read = b.read.next
-	}
-	for b.head != b.read {
-		node := b.head
-		b.head = b.head.next
-		node.Release()
-	}
-	for i := range b.caches {
-		free(b.caches[i])
-		b.caches[i] = nil
-	}
-	b.caches = b.caches[:0]
-	if b.cachePeek != nil {
-		free(b.cachePeek)
-		b.cachePeek = nil
-	}
-	return nil
-}
+func (b *UnsafeLinkBuffer) Release() (err error) { _ = "STUB: not implemented"; return nil }
 
 // ReadString implements Reader.
 func (b *UnsafeLinkBuffer) ReadString(n int) (s string, err error) {
-	if n <= 0 {
-		return
-	}
-	// check whether enough or not.
-	if b.Len() < n {
-		return s, fmt.Errorf("link buffer read string[%d] not enough", n)
-	}
-	p := b.readBinary(n)
-	return unsafe.String(unsafe.SliceData(p), len(p)), nil
+	_ = "STUB: not implemented"
+	return "",
+
+		// check whether enough or not.
+		nil
 }
 
 // ReadBinary implements Reader.
 func (b *UnsafeLinkBuffer) ReadBinary(n int) (p []byte, err error) {
-	if n <= 0 {
-		return
-	}
-	// check whether enough or not.
-	if b.Len() < n {
-		return p, fmt.Errorf("link buffer read binary[%d] not enough", n)
-	}
-	return b.readBinary(n), nil
+	_ = "STUB: not implemented"
+	return nil,
+
+		// check whether enough or not.
+		nil
 }
 
 // readBinary cannot use mcache, because the memory allocated by readBinary will not be recycled.
 func (b *UnsafeLinkBuffer) readBinary(n int) (p []byte) {
-	b.recalLen(-n) // re-cal length
-
-	// single node
-	if b.isSingleNode(n) {
-		p = dirtmake.Bytes(n, n)
-		copy(p, b.read.Next(n))
-		return p
-	}
-	p = dirtmake.Bytes(n, n)
-	// multiple nodes
-	var pIdx int
-	var l int
-	for ack := n; ack > 0; ack = ack - l {
-		l = b.read.Len()
-		if l >= ack {
-			pIdx += copy(p[pIdx:], b.read.Next(ack))
-			break
-		} else if l > 0 {
-			pIdx += copy(p[pIdx:], b.read.Next(l))
-		}
-		b.read = b.read.next
-	}
-	_ = pIdx
-	return p
+	_ = "STUB: not implemented"
+	// re-cal length
+	return nil
 }
+
+// single node
+
+// multiple nodes
 
 // ReadByte implements Reader.
 func (b *UnsafeLinkBuffer) ReadByte() (p byte, err error) {
+	_ = "STUB: not implemented"
 	// check whether enough or not.
-	if b.Len() < 1 {
-		return p, errors.New("link buffer read byte is empty")
-	}
-	b.recalLen(-1) // re-cal length
-	for {
-		if b.read.Len() >= 1 {
-			return b.read.Next(1)[0], nil
-		}
-		b.read = b.read.next
-	}
+	return 0, nil
 }
+
+// re-cal length
 
 // Until returns a slice ends with the delim in the buffer.
 func (b *UnsafeLinkBuffer) Until(delim byte) (line []byte, err error) {
-	n := b.indexByte(delim, 0)
-	if n < 0 {
-		return nil, untilErr
-	}
-	return b.Next(n + 1)
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // Slice returns a new LinkBuffer, which is a zero-copy slice of this LinkBuffer,
@@ -374,323 +192,132 @@ func (b *UnsafeLinkBuffer) Until(delim byte) (line []byte, err error) {
 //
 // Slice will automatically execute a Release.
 func (b *UnsafeLinkBuffer) Slice(n int) (r Reader, err error) {
-	if n <= 0 {
-		return NewLinkBuffer(0), nil
-	}
-	// check whether enough or not.
-	if b.Len() < n {
-		return r, fmt.Errorf("link buffer readv[%d] not enough", n)
-	}
-	b.recalLen(-n) // re-cal length
-
-	// just use for range
-	p := new(LinkBuffer)
-	p.length = int64(n)
-
-	defer func() {
-		// set to read-only
-		p.flush = p.flush.next
-		p.write = p.flush
-	}()
-
-	// single node
-	if b.isSingleNode(n) {
-		b.read.setFlag(flagReadExposed)
-		node := b.read.Refer(n)
-		p.head, p.read, p.flush = node, node, node
-		return p, nil
-	}
-	// multiple nodes
-	l := b.read.Len()
-	b.read.setFlag(flagReadExposed)
-	node := b.read.Refer(l)
-	b.read = b.read.next
-
-	p.head, p.read, p.flush = node, node, node
-	for ack := n - l; ack > 0; ack = ack - l {
-		l = b.read.Len()
-		if l >= ack {
-			b.read.setFlag(flagReadExposed)
-			p.flush.next = b.read.Refer(ack)
-			p.flush = p.flush.next
-			break
-		} else if l > 0 {
-			b.read.setFlag(flagReadExposed)
-			p.flush.next = b.read.Refer(l)
-			p.flush = p.flush.next
-		}
-		b.read = b.read.next
-	}
-	return p, b.Release()
+	_ = "STUB: not implemented"
+	return *new(Reader), nil
 }
+
+// check whether enough or not.
+
+// re-cal length
+
+// just use for range
+
+// set to read-only
+
+// single node
+
+// multiple nodes
 
 // ------------------------------------------ implement zero-copy writer ------------------------------------------
 
 // Malloc pre-allocates memory, which is not readable, and becomes readable data after submission(e.g. Flush).
 func (b *UnsafeLinkBuffer) Malloc(n int) (buf []byte, err error) {
-	if n <= 0 {
-		return
-	}
-	b.mallocSize += n
-	b.growth(n)
-	return b.write.Malloc(n), nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // MallocLen implements Writer.
-func (b *UnsafeLinkBuffer) MallocLen() (length int) {
-	return b.mallocSize
-}
+func (b *UnsafeLinkBuffer) MallocLen() (length int) { _ = "STUB: not implemented"; return 0 }
 
 // MallocAck will keep the first n malloc bytes and discard the rest.
-func (b *UnsafeLinkBuffer) MallocAck(n int) (err error) {
-	if n < 0 {
-		return fmt.Errorf("link buffer malloc ack[%d] invalid", n)
-	}
-	b.mallocSize = n
-	b.write = b.flush
+func (b *UnsafeLinkBuffer) MallocAck(n int) (err error) { _ = "STUB: not implemented"; return nil }
 
-	var l int
-	for ack := n; ack > 0; ack = ack - l {
-		l = b.write.malloc - len(b.write.buf)
-		if l >= ack {
-			b.write.malloc = ack + len(b.write.buf)
-			break
-		}
-		b.write = b.write.next
-	}
-	// discard the rest
-	for node := b.write.next; node != nil; node = node.next {
-		node.malloc, node.refer, node.buf = node.off, 1, node.buf[:node.off]
-	}
-	return nil
-}
+// discard the rest
 
 // Flush will submit all malloc data and must confirm that the allocated bytes have been correctly assigned.
 func (b *UnsafeLinkBuffer) Flush() (err error) {
-	b.mallocSize = 0
+	_ = "STUB: not implemented"
+
 	// FIXME: The tail node must not be larger than 8KB to prevent Out Of Memory.
-	if cap(b.write.buf) > pagesize {
-		b.write.next = newLinkBufferNode(0)
-		b.write = b.write.next
-	}
-	var n int
-	for node := b.flush; node != b.write.next; node = node.next {
-		delta := node.malloc - len(node.buf)
-		if delta > 0 {
-			n += delta
-			node.buf = node.buf[:node.malloc]
-		}
-	}
-	b.flush = b.write
-	// re-cal length
-	b.recalLen(n)
 	return nil
 }
 
+// re-cal length
+
 // Append implements Writer.
-func (b *UnsafeLinkBuffer) Append(w Writer) (err error) {
-	buf, ok := w.(*LinkBuffer)
-	if !ok {
-		return errors.New("unsupported writer which is not LinkBuffer")
-	}
-	return b.WriteBuffer(buf)
-}
+func (b *UnsafeLinkBuffer) Append(w Writer) (err error) { _ = "STUB: not implemented"; return nil }
 
 // WriteBuffer will not submit(e.g. Flush) data to ensure normal use of MallocLen.
 // you must actively submit before read the data.
 // The argument buf can't be used after calling WriteBuffer. (set it to nil)
 func (b *UnsafeLinkBuffer) WriteBuffer(buf *LinkBuffer) (err error) {
-	if buf == nil {
-		return
-	}
-	bufLen, bufMallocLen := buf.Len(), buf.MallocLen()
-	if bufLen+bufMallocLen <= 0 {
-		return nil
-	}
-	b.write.next = buf.read
-	b.write = buf.write
-
-	// close buf, prevents reuse.
-	for buf.head != buf.read {
-		nd := buf.head
-		buf.head = buf.head.next
-		nd.Release()
-	}
-	for buf.write = buf.write.next; buf.write != nil; {
-		nd := buf.write
-		buf.write = buf.write.next
-		nd.Release()
-	}
-	buf.length, buf.mallocSize, buf.head, buf.read, buf.flush, buf.write = 0, 0, nil, nil, nil, nil
-
-	// DON'T MODIFY THE CODE BELOW UNLESS YOU KNOW WHAT YOU ARE DOING !
-	//
-	// You may encounter a chain of bugs and not be able to
-	// find out within a week that they are caused by modifications here.
-	//
-	// After release buf, continue to adjust b.
-	b.write.next = nil
-	if bufLen > 0 {
-		b.recalLen(bufLen)
-	}
-	b.mallocSize += bufMallocLen
+	_ = "STUB: not implemented"
 	return nil
 }
 
+// close buf, prevents reuse.
+
+// DON'T MODIFY THE CODE BELOW UNLESS YOU KNOW WHAT YOU ARE DOING !
+//
+// You may encounter a chain of bugs and not be able to
+// find out within a week that they are caused by modifications here.
+//
+// After release buf, continue to adjust b.
+
 // WriteString implements Writer.
 func (b *UnsafeLinkBuffer) WriteString(s string) (n int, err error) {
-	if len(s) == 0 {
-		return
-	}
-	buf := unsafe.Slice(unsafe.StringData(s), len(s))
-	return b.WriteBinary(buf)
+	_ = "STUB: not implemented"
+	return 0, nil
 }
 
 // WriteBinary implements Writer.
 func (b *UnsafeLinkBuffer) WriteBinary(p []byte) (n int, err error) {
-	n = len(p)
-	if n == 0 {
-		return
-	}
-	b.mallocSize += n
-
-	// TODO: Verify that all nocopy is possible under mcache.
-	if n > BinaryInplaceThreshold {
-		// expand buffer directly with nocopy
-		b.write.next = newLinkBufferNode(0)
-		b.write = b.write.next
-		b.write.buf, b.write.malloc = p[:0], n
-		return n, nil
-	}
-	// here will copy
-	b.growth(n)
-	buf := b.write.Malloc(n)
-	return copy(buf, p), nil
+	_ = "STUB: not implemented"
+	return 0, nil
 }
+
+// TODO: Verify that all nocopy is possible under mcache.
+
+// expand buffer directly with nocopy
+
+// here will copy
 
 // WriteDirect cannot be mixed with WriteString or WriteBinary functions.
 func (b *UnsafeLinkBuffer) WriteDirect(extra []byte, remainLen int) error {
-	n := len(extra)
-	if n == 0 || remainLen < 0 {
-		return nil
-	}
-	// find origin
-	origin := b.flush
-	malloc := b.mallocSize - remainLen // calculate the remaining malloc length
-	for t := origin.malloc - len(origin.buf); t < malloc; t = origin.malloc - len(origin.buf) {
-		malloc -= t
-		origin = origin.next
-	}
-	// Add the buf length of the original node
-	// `malloc` is the origin buffer offset that already malloced, the extra buffer should be inserted after that offset.
-	malloc += len(origin.buf)
-
-	// Create dataNode and newNode and insert them into the chain
-	// dataNode wrap the user buffer extra, and newNode wrap the origin left netpoll buffer
-	// - originNode{buf=origin, off=0, malloc=malloc, readonly=true} : non-reusable
-	// - dataNode{buf=extra, off=0, malloc=len(extra), readonly=true} : non-reusable
-	// - newNode{buf=origin, off=malloc, malloc=origin.malloc, readonly=false} : reusable
-	dataNode := newLinkBufferNode(0) // zero node will be set by readonly mode
-	dataNode.buf, dataNode.malloc = extra[:0], n
-
-	if remainLen > 0 {
-		// split a single buffer node to originNode and newNode
-		newNode := newLinkBufferNode(0)
-		newNode.off = malloc
-		newNode.buf = origin.buf[:malloc]
-		newNode.malloc = origin.malloc
-		newNode.unsetFlag(flagUnmanaged)
-		origin.malloc = malloc
-		origin.setFlag(flagUnmanaged)
-
-		// link nodes
-		dataNode.next = newNode
-		newNode.next = origin.next
-		origin.next = dataNode
-	} else {
-		// link nodes
-		dataNode.next = origin.next
-		origin.next = dataNode
-	}
-
-	// adjust b.write
-	for b.write.next != nil {
-		b.write = b.write.next
-	}
-
-	b.mallocSize += n
+	_ = "STUB: not implemented"
 	return nil
 }
+
+// find origin
+
+// calculate the remaining malloc length
+
+// Add the buf length of the original node
+// `malloc` is the origin buffer offset that already malloced, the extra buffer should be inserted after that offset.
+
+// Create dataNode and newNode and insert them into the chain
+// dataNode wrap the user buffer extra, and newNode wrap the origin left netpoll buffer
+// - originNode{buf=origin, off=0, malloc=malloc, readonly=true} : non-reusable
+// - dataNode{buf=extra, off=0, malloc=len(extra), readonly=true} : non-reusable
+// - newNode{buf=origin, off=malloc, malloc=origin.malloc, readonly=false} : reusable
+// zero node will be set by readonly mode
+
+// split a single buffer node to originNode and newNode
+
+// link nodes
+
+// link nodes
+
+// adjust b.write
 
 // WriteByte implements Writer.
-func (b *UnsafeLinkBuffer) WriteByte(p byte) (err error) {
-	dst, err := b.Malloc(1)
-	if len(dst) == 1 {
-		dst[0] = p
-	}
-	return err
-}
+func (b *UnsafeLinkBuffer) WriteByte(p byte) (err error) { _ = "STUB: not implemented"; return nil }
 
 // Close will recycle all buffer.
-func (b *UnsafeLinkBuffer) Close() (err error) {
-	atomic.StoreInt64(&b.length, 0)
-	b.mallocSize = 0
-	// just release all
-	b.Release()
-	for node := b.head; node != nil; {
-		nd := node
-		node = node.next
-		nd.Release()
-	}
-	b.head, b.read, b.flush, b.write = nil, nil, nil, nil
-	return nil
-}
+func (b *UnsafeLinkBuffer) Close() (err error) { _ = "STUB: not implemented"; return nil }
+
+// just release all
 
 // ------------------------------------------ implement connection interface ------------------------------------------
 
 // Bytes returns all the readable bytes of this LinkBuffer.
-func (b *UnsafeLinkBuffer) Bytes() []byte {
-	node, flush := b.read, b.flush
-	if node == flush {
-		return node.buf[node.off:]
-	}
-	n := 0
-	p := dirtmake.Bytes(b.Len(), b.Len())
-	for ; node != flush; node = node.next {
-		if node.Len() > 0 {
-			n += copy(p[n:], node.buf[node.off:])
-		}
-	}
-	n += copy(p[n:], flush.buf[flush.off:])
-	return p[:n]
-}
+func (b *UnsafeLinkBuffer) Bytes() []byte { _ = "STUB: not implemented"; return nil }
 
 // GetBytes will read and fill the slice p as much as possible.
 // If p is not passed, return all readable bytes.
 func (b *UnsafeLinkBuffer) GetBytes(p [][]byte) (vs [][]byte) {
-	node, flush := b.read, b.flush
-	if len(p) == 0 {
-		n := 0
-		for ; node != flush; node = node.next {
-			n++
-		}
-		node = b.read
-		p = make([][]byte, n)
-	}
-	var i int
-	for i = 0; node != flush && i < len(p); node = node.next {
-		if node.Len() > 0 {
-			node.setFlag(flagReadExposed)
-			p[i] = node.buf[node.off:]
-			i++
-		}
-	}
-	if i < len(p) {
-		flush.setFlag(flagReadExposed)
-		p[i] = flush.buf[flush.off:]
-		i++
-	}
-	return p[:i]
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // book will grow and malloc buffer to hold data.
@@ -700,159 +327,77 @@ func (b *UnsafeLinkBuffer) GetBytes(p [][]byte) (vs [][]byte) {
 //
 //	guarantee all data allocated in one node to reduce copy.
 func (b *UnsafeLinkBuffer) book(bookSize, maxSize int) (p []byte) {
-	l := cap(b.write.buf) - b.write.malloc
-	// grow linkBuffer
-	if l == 0 {
-		l = maxSize
-		b.write.next = newLinkBufferNode(maxSize)
-		b.write = b.write.next
-	}
-	if l > bookSize {
-		l = bookSize
-	}
-	return b.write.Malloc(l)
+	_ = "STUB: not implemented"
+	return nil
 }
+
+// grow linkBuffer
 
 // bookAck will ack the first n malloc bytes and discard the rest.
 //
 // length: The size of data in inputBuffer. It is used to calculate the maxSize
 func (b *UnsafeLinkBuffer) bookAck(n int) (length int, err error) {
-	b.write.malloc = n + len(b.write.buf)
-	b.write.buf = b.write.buf[:b.write.malloc]
-	b.flush = b.write
-
-	// re-cal length
-	length = b.recalLen(n)
-	return length, nil
+	_ = "STUB: not implemented"
+	return 0, nil
 }
+
+// re-cal length
 
 // calcMaxSize will calculate the data size between two Release()
-func (b *UnsafeLinkBuffer) calcMaxSize() (sum int) {
-	for node := b.head; node != b.read; node = node.next {
-		sum += len(node.buf)
-	}
-	sum += len(b.read.buf)
-	return sum
-}
+func (b *UnsafeLinkBuffer) calcMaxSize() (sum int) { _ = "STUB: not implemented"; return 0 }
 
 // resetTail will reset tail node or add an empty tail node to
 // guarantee the tail node is not larger than 8KB
-func (b *UnsafeLinkBuffer) resetTail(maxSize int) {
-	if maxSize <= pagesize {
-		// no need to reset a small buffer tail node
-		return
-	}
-	// set nil tail
-	b.write.next = newLinkBufferNode(0)
-	b.write = b.write.next
-	b.flush = b.write
-}
+func (b *UnsafeLinkBuffer) resetTail(maxSize int) { _ = "STUB: not implemented"; return }
+
+// no need to reset a small buffer tail node
+
+// set nil tail
 
 // indexByte returns the index of the first instance of c in buffer, or -1 if c is not present in buffer.
-func (b *UnsafeLinkBuffer) indexByte(c byte, skip int) int {
-	size := b.Len()
-	if skip >= size {
-		return -1
-	}
-	var unread, n, l int
-	node := b.read
-	for unread = size; unread > 0; unread -= n {
-		l = node.Len()
-		if l >= unread { // last node
-			n = unread
-		} else { // read full node
-			n = l
-		}
+func (b *UnsafeLinkBuffer) indexByte(c byte, skip int) int { _ = "STUB: not implemented"; return 0 }
 
-		// skip current node
-		if skip >= n {
-			skip -= n
-			node = node.next
-			continue
-		}
-		i := bytes.IndexByte(node.Peek(n)[skip:], c)
-		if i >= 0 {
-			return (size - unread) + skip + i // past_read + skip_read + index
-		}
-		skip = 0 // no skip bytes
-		node = node.next
-	}
-	return -1
-}
+// last node
+
+// read full node
+
+// skip current node
+
+// past_read + skip_read + index
+
+// no skip bytes
 
 // ------------------------------------------ private function ------------------------------------------
 
 // recalLen re-calculate the length
-func (b *UnsafeLinkBuffer) recalLen(delta int) (length int) {
-	if delta < 0 && len(b.cachePeek) > 0 {
-		// b.cachePeek will contain stale data if we read out even a single byte from buffer,
-		// so we need to reset it or the next Peek call will return invalid bytes.
-		b.cachePeek = b.cachePeek[:0]
-	}
-	return int(atomic.AddInt64(&b.length, int64(delta)))
-}
+func (b *UnsafeLinkBuffer) recalLen(delta int) (length int) { _ = "STUB: not implemented"; return 0 }
+
+// b.cachePeek will contain stale data if we read out even a single byte from buffer,
+// so we need to reset it or the next Peek call will return invalid bytes.
 
 // growth directly create the next node, when b.write is not enough.
-func (b *UnsafeLinkBuffer) growth(n int) {
-	if n <= 0 {
-		return
-	}
-	// the memory of readonly node if not malloc by us so should skip them
-	for b.write.getFlag(flagUnmanaged) || cap(b.write.buf)-b.write.malloc < n {
-		if b.write.next == nil {
-			b.write.next = newLinkBufferNode(n)
-			b.write = b.write.next
-			return
-		}
-		b.write = b.write.next
-	}
-}
+func (b *UnsafeLinkBuffer) growth(n int) { _ = "STUB: not implemented"; return }
+
+// the memory of readonly node if not malloc by us so should skip them
 
 // isSingleNode determines whether reading needs to cross nodes.
 // isSingleNode will move b.read to latest non-empty node if there is a zero-size node
 // Must require b.Len() > 0
 func (b *UnsafeLinkBuffer) isSingleNode(readN int) (single bool) {
-	if readN <= 0 {
-		return true
-	}
-	l := b.read.Len()
-	for l == 0 && b.read != b.flush {
-		b.read = b.read.next
-		l = b.read.Len()
-	}
-	return l >= readN
+	_ = "STUB: not implemented"
+	return false
 }
 
 // memorySize return the real memory size in bytes the LinkBuffer occupied
-func (b *LinkBuffer) memorySize() (bytes int) {
-	for node := b.head; node != nil; node = node.next {
-		bytes += cap(node.buf)
-	}
-	for _, c := range b.caches {
-		bytes += cap(c)
-	}
-	bytes += cap(b.cachePeek)
-	return bytes
-}
+func (b *LinkBuffer) memorySize() (bytes int) { _ = "STUB: not implemented"; return 0 }
 
 // ------------------------------------------ implement link node ------------------------------------------
 
 // newLinkBufferNode create or reuse linkBufferNode.
 // Nodes with size <= 0 are marked as readonly, which means the node.buf is not allocated by this mcache.
-func newLinkBufferNode(size int) *linkBufferNode {
-	node := linkedPool.Get().(*linkBufferNode)
-	// reset node offset
-	node.off, node.malloc, node.refer, node.mode = 0, 0, 1, defaultLinkBufferMode
-	if size <= 0 {
-		node.setFlag(flagUnmanaged)
-		return node
-	}
-	if size < LinkBufferCap {
-		size = LinkBufferCap
-	}
-	node.buf = malloc(0, size)
-	return node
-}
+func newLinkBufferNode(size int) *linkBufferNode { _ = "STUB: not implemented"; return nil }
+
+// reset node offset
 
 var linkedPool = sync.Pool{
 	New: func() interface{} {
@@ -872,92 +417,45 @@ type linkBufferNode struct {
 	next   *linkBufferNode // the next node of the linked buffer
 }
 
-func (node *linkBufferNode) Len() (l int) {
-	return len(node.buf) - node.off
-}
+func (node *linkBufferNode) Len() (l int) { _ = "STUB: not implemented"; return 0 }
 
-func (node *linkBufferNode) IsEmpty() (ok bool) {
-	return node.off == len(node.buf)
-}
+func (node *linkBufferNode) IsEmpty() (ok bool) { _ = "STUB: not implemented"; return false }
 
-func (node *linkBufferNode) Reset() {
-	if node.origin != nil || atomic.LoadInt32(&node.refer) != 1 {
-		return
-	}
-	node.off, node.malloc = 0, 0
-	node.buf = node.buf[:0]
-}
+func (node *linkBufferNode) Reset() { _ = "STUB: not implemented"; return }
 
-func (node *linkBufferNode) Next(n int) (p []byte) {
-	off := node.off
-	node.off += n
-	return node.buf[off:node.off:node.off]
-}
+func (node *linkBufferNode) Next(n int) (p []byte) { _ = "STUB: not implemented"; return nil }
 
-func (node *linkBufferNode) Peek(n int) (p []byte) {
-	return node.buf[node.off : node.off+n : node.off+n]
-}
+func (node *linkBufferNode) Peek(n int) (p []byte) { _ = "STUB: not implemented"; return nil }
 
-func (node *linkBufferNode) Malloc(n int) (buf []byte) {
-	malloc := node.malloc
-	node.malloc += n
-	return node.buf[malloc:node.malloc:node.malloc]
-}
+func (node *linkBufferNode) Malloc(n int) (buf []byte) { _ = "STUB: not implemented"; return nil }
 
 // Refer holds a reference count at the same time as Next, and releases the real buffer after Release.
 // The node obtained by Refer is read-only.
-func (node *linkBufferNode) Refer(n int) (p *linkBufferNode) {
-	p = newLinkBufferNode(0)
-	p.buf = node.Next(n)
-
-	if node.origin != nil {
-		p.origin = node.origin
-	} else {
-		p.origin = node
-	}
-	atomic.AddInt32(&p.origin.refer, 1)
-	return p
-}
+func (node *linkBufferNode) Refer(n int) (p *linkBufferNode) { _ = "STUB: not implemented"; return nil }
 
 // Release consists of two parts:
 // 1. reduce the reference count of itself and origin.
 // 2. recycle the buf when the reference count is 0.
-func (node *linkBufferNode) Release() (err error) {
-	if node.origin != nil {
-		node.origin.Release()
-	}
-	// release self
-	if atomic.AddInt32(&node.refer, -1) == 0 {
-		// readonly nodes cannot recycle node.buf, other node.buf are recycled to mcache.
-		if node.reusable() {
-			free(node.buf)
-		}
-		node.buf, node.origin, node.next = nil, nil, nil
-		linkedPool.Put(node)
-	}
-	return nil
-}
+func (node *linkBufferNode) Release() (err error) { _ = "STUB: not implemented"; return nil }
 
-func (node *linkBufferNode) getFlag(flag uint8) bool {
-	return node.mode&flag > 0
-}
+// release self
 
-func (node *linkBufferNode) setFlag(flag uint8) {
-	node.mode |= flag
-}
+// readonly nodes cannot recycle node.buf, other node.buf are recycled to mcache.
+
+func (node *linkBufferNode) getFlag(flag uint8) bool { _ = "STUB: not implemented"; return false }
+
+func (node *linkBufferNode) setFlag(flag uint8) { _ = "STUB: not implemented"; return }
 
 func (node *linkBufferNode) unsetFlag(flag uint8) {
-	node.mode &^= flag
+	_ = "STUB: not implemented"
+
+	// reusable reports whether the node's buffer memory is owned by the LinkBuffer and can be recycled.
+	// Called during Release to decide if node.buf should be returned to mcache via free.
+	return
 }
 
-// reusable reports whether the node's buffer memory is owned by the LinkBuffer and can be recycled.
-// Called during Release to decide if node.buf should be returned to mcache via free.
-func (node *linkBufferNode) reusable() bool {
-	return node.mode&flagUnmanaged == 0
-}
+func (node *linkBufferNode) reusable() bool { _ = "STUB: not implemented"; return false }
 
 // readExposed reports whether the node's buffer has been returned directly to user code
 // via a zero-copy Reader method and may still be referenced externally.
-func (node *linkBufferNode) readExposed() bool {
-	return node.mode&flagReadExposed > 0
-}
+func (node *linkBufferNode) readExposed() bool { _ = "STUB: not implemented"; return false }

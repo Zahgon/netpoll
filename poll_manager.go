@@ -16,24 +16,13 @@
 
 package netpoll
 
-import (
-	"fmt"
-	"runtime"
-	"sync/atomic"
-)
-
 const (
 	managerUninitialized = iota
 	managerInitializing
 	managerInitialized
 )
 
-func newManager(numLoops int) *manager {
-	m := new(manager)
-	m.SetLoadBalance(RoundRobin)
-	m.SetNumLoops(numLoops)
-	return m
-}
+func newManager(numLoops int) *manager { _ = "STUB: not implemented"; return nil }
 
 // LoadBalance is used to do load balancing among multiple pollers.
 // a single poller may not be optimal if the number of cores is large (40C+).
@@ -45,108 +34,45 @@ type manager struct {
 }
 
 // SetNumLoops will return error when set numLoops < 1
-func (m *manager) SetNumLoops(numLoops int) (err error) {
-	if numLoops < 1 {
-		return fmt.Errorf("set invalid numLoops[%d]", numLoops)
-	}
-	// note: set new numLoops first and then change the status
-	atomic.StoreInt32(&m.numLoops, int32(numLoops))
-	atomic.StoreInt32(&m.status, managerUninitialized)
-	return nil
-}
+func (m *manager) SetNumLoops(numLoops int) (err error) { _ = "STUB: not implemented"; return nil }
+
+// note: set new numLoops first and then change the status
 
 // SetLoadBalance set load balance.
-func (m *manager) SetLoadBalance(lb LoadBalance) error {
-	if m.balance != nil && m.balance.LoadBalance() == lb {
-		return nil
-	}
-	m.balance = newLoadbalance(lb, m.polls)
-	return nil
-}
+func (m *manager) SetLoadBalance(lb LoadBalance) error { _ = "STUB: not implemented"; return nil }
 
 // Close release all resources.
-func (m *manager) Close() (err error) {
-	for _, poll := range m.polls {
-		err = poll.Close()
-	}
-	m.numLoops = 0
-	m.balance = nil
-	m.polls = nil
-	return err
-}
+func (m *manager) Close() (err error) { _ = "STUB: not implemented"; return nil }
 
 // Run all pollers.
-func (m *manager) Run() (err error) {
-	defer func() {
-		if err != nil {
-			_ = m.Close()
-		}
-	}()
+func (m *manager) Run() (err error) { _ = "STUB: not implemented"; return nil }
 
-	numLoops := int(atomic.LoadInt32(&m.numLoops))
-	if numLoops == len(m.polls) {
-		return nil
-	}
-	polls := make([]Poll, numLoops)
-	if numLoops < len(m.polls) {
-		// shrink polls
-		copy(polls, m.polls[:numLoops])
-		for idx := numLoops; idx < len(m.polls); idx++ {
-			// close redundant polls
-			if err = m.polls[idx].Close(); err != nil {
-				logger.Printf("NETPOLL: poller close failed: %v\n", err)
-			}
-		}
-	} else {
-		// growth polls
-		copy(polls, m.polls)
-		for idx := len(m.polls); idx < numLoops; idx++ {
-			var poll Poll
-			poll, err = openPoll()
-			if err != nil {
-				return err
-			}
-			polls[idx] = poll
-			go poll.Wait()
-		}
-	}
-	m.polls = polls
+// shrink polls
 
-	// LoadBalance must be set before calling Run, otherwise it will panic.
-	m.balance.Rebalance(m.polls)
-	return nil
-}
+// close redundant polls
+
+// growth polls
+
+// LoadBalance must be set before calling Run, otherwise it will panic.
 
 // Reset pollers, this operation is very dangerous, please make sure to do this when calling !
-func (m *manager) Reset() error {
-	for _, poll := range m.polls {
-		poll.Close()
-	}
-	m.polls = nil
-	return m.Run()
-}
+func (m *manager) Reset() error { _ = "STUB: not implemented"; return nil }
 
 // Pick will select the poller for use each time based on the LoadBalance.
 func (m *manager) Pick() Poll {
-START:
-	// fast path
-	if atomic.LoadInt32(&m.status) == managerInitialized {
-		return m.balance.Pick()
-	}
-	// slow path
-	// try to get initializing lock failed, wait others finished the init work, and try again
-	if !atomic.CompareAndSwapInt32(&m.status, managerUninitialized, managerInitializing) {
-		runtime.Gosched()
-		goto START
-	}
-	// adjust polls
-	// m.Run() will finish very quickly, so will not many goroutines block on Pick.
-	_ = m.Run()
+	_ = "STUB: not implemented"
 
-	//nolint:staticcheck // SA9003: empty branch
-	if !atomic.CompareAndSwapInt32(&m.status, managerInitializing, managerInitialized) {
-		// SetNumLoops called during m.Run() which cause CAS failed
-		// The polls will be adjusted next Pick
-	}
-	return m.balance.Pick()
+	// fast path
+	return *new(Poll)
 }
+
+// slow path
+// try to get initializing lock failed, wait others finished the init work, and try again
+
+// adjust polls
+// m.Run() will finish very quickly, so will not many goroutines block on Pick.
+
+//nolint:staticcheck // SA9003: empty branch
+
+// SetNumLoops called during m.Run() which cause CAS failed
+// The polls will be adjusted next Pick

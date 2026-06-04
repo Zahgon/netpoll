@@ -29,9 +29,7 @@ import (
 // `ctx` is used to pass to underlying implementation
 var RunTask func(ctx context.Context, f func())
 
-func goRunTask(ctx context.Context, f func()) {
-	go f()
-}
+func goRunTask(ctx context.Context, f func()) { _ = "STUB: not implemented"; return }
 
 func init() {
 	// netpoll uses github.com/bytedance/gopkg/util/gopool by default
@@ -46,12 +44,7 @@ func init() {
 
 // UseGoRunTask updates RunTask with goRunTask which creates
 // a new goroutine for the given func, basically `go f()`
-func UseGoRunTask() {
-	RunTask = goRunTask
-}
+func UseGoRunTask() { _ = "STUB: not implemented"; return }
 
 // SetPanicHandler sets the panic handler for the global pool.
-func SetPanicHandler(f func(context.Context, interface{})) {
-	bgopool.SetPanicHandler(f)
-	cgopool.SetPanicHandler(f)
-}
+func SetPanicHandler(f func(context.Context, interface{})) { _ = "STUB: not implemented"; return }

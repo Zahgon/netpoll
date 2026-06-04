@@ -15,18 +15,12 @@
 package netpoll
 
 import (
-	"fmt"
 	"io"
 )
 
 const maxReadCycle = 16
 
-func newZCReader(r io.Reader) *zcReader {
-	return &zcReader{
-		r:   r,
-		buf: NewLinkBuffer(),
-	}
-}
+func newZCReader(r io.Reader) *zcReader { _ = "STUB: not implemented"; return nil }
 
 var _ Reader = &zcReader{}
 
@@ -37,119 +31,56 @@ type zcReader struct {
 }
 
 // Next implements Reader.
-func (r *zcReader) Next(n int) (p []byte, err error) {
-	if err = r.waitRead(n); err != nil {
-		return p, err
-	}
-	return r.buf.Next(n)
-}
+func (r *zcReader) Next(n int) (p []byte, err error) { _ = "STUB: not implemented"; return nil, nil }
 
 // Peek implements Reader.
-func (r *zcReader) Peek(n int) (buf []byte, err error) {
-	if err = r.waitRead(n); err != nil {
-		return buf, err
-	}
-	return r.buf.Peek(n)
-}
+func (r *zcReader) Peek(n int) (buf []byte, err error) { _ = "STUB: not implemented"; return nil, nil }
 
 // Skip implements Reader.
-func (r *zcReader) Skip(n int) (err error) {
-	if err = r.waitRead(n); err != nil {
-		return err
-	}
-	return r.buf.Skip(n)
-}
+func (r *zcReader) Skip(n int) (err error) { _ = "STUB: not implemented"; return nil }
 
 // Release implements Reader.
-func (r *zcReader) Release() (err error) {
-	return r.buf.Release()
-}
+func (r *zcReader) Release() (err error) { _ = "STUB: not implemented"; return nil }
 
 // Slice implements Reader.
 func (r *zcReader) Slice(n int) (reader Reader, err error) {
-	if err = r.waitRead(n); err != nil {
-		return nil, err
-	}
-	return r.buf.Slice(n)
+	_ = "STUB: not implemented"
+	return *new(Reader), nil
 }
 
 // Len implements Reader.
 func (r *zcReader) Len() (length int) {
-	return r.buf.Len()
+	_ = "STUB: not implemented"
+
+	// ReadString implements Reader.
+	return 0
 }
 
-// ReadString implements Reader.
 func (r *zcReader) ReadString(n int) (s string, err error) {
-	if err = r.waitRead(n); err != nil {
-		return s, err
-	}
-	return r.buf.ReadString(n)
+	_ = "STUB: not implemented"
+	return "", nil
 }
 
 // ReadBinary implements Reader.
 func (r *zcReader) ReadBinary(n int) (p []byte, err error) {
-	if err = r.waitRead(n); err != nil {
-		return p, err
-	}
-	return r.buf.ReadBinary(n)
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // ReadByte implements Reader.
-func (r *zcReader) ReadByte() (b byte, err error) {
-	if err = r.waitRead(1); err != nil {
-		return b, err
-	}
-	return r.buf.ReadByte()
-}
+func (r *zcReader) ReadByte() (b byte, err error) { _ = "STUB: not implemented"; return 0, nil }
 
 func (r *zcReader) Until(delim byte) (line []byte, err error) {
-	return r.buf.Until(delim)
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-func (r *zcReader) waitRead(n int) (err error) {
-	for r.buf.Len() < n {
-		err = r.fill(n)
-		if err != nil {
-			if err == io.EOF {
-				err = Exception(ErrEOF, "")
-			}
-			return err
-		}
-	}
-	return nil
-}
+func (r *zcReader) waitRead(n int) (err error) { _ = "STUB: not implemented"; return nil }
 
 // fill buffer to greater than n, range no more than 16 times.
-func (r *zcReader) fill(n int) (err error) {
-	var buf []byte
-	var num int
-	for i := 0; i < maxReadCycle && r.buf.Len() < n && err == nil; i++ {
-		buf, err = r.buf.Malloc(block4k)
-		if err != nil {
-			return err
-		}
-		num, err = r.r.Read(buf)
-		if num < 0 {
-			if err == nil {
-				err = fmt.Errorf("zcReader fill negative count[%d]", num)
-			}
-			num = 0
-		}
-		r.buf.MallocAck(num)
-		r.buf.Flush()
-		if err != nil {
-			return err
-		}
-	}
-	return err
-}
+func (r *zcReader) fill(n int) (err error) { _ = "STUB: not implemented"; return nil }
 
-func newZCWriter(w io.Writer) *zcWriter {
-	return &zcWriter{
-		w:   w,
-		buf: NewLinkBuffer(),
-	}
-}
+func newZCWriter(w io.Writer) *zcWriter { _ = "STUB: not implemented"; return nil }
 
 var _ Writer = &zcWriter{}
 
@@ -161,54 +92,46 @@ type zcWriter struct {
 
 // Malloc implements Writer.
 func (w *zcWriter) Malloc(n int) (buf []byte, err error) {
-	return w.buf.Malloc(n)
+	_ = "STUB: not implemented"
+	return nil,
+
+		// MallocLen implements Writer.
+		nil
 }
 
-// MallocLen implements Writer.
-func (w *zcWriter) MallocLen() (length int) {
-	return w.buf.MallocLen()
-}
+func (w *zcWriter) MallocLen() (length int) { _ = "STUB: not implemented"; return 0 }
 
 // Flush implements Writer.
-func (w *zcWriter) Flush() (err error) {
-	w.buf.Flush()
-	n, err := w.w.Write(w.buf.Bytes())
-	if n > 0 {
-		w.buf.Skip(n)
-		w.buf.Release()
-	}
-	return err
-}
+func (w *zcWriter) Flush() (err error) { _ = "STUB: not implemented"; return nil }
 
 // MallocAck implements Writer.
-func (w *zcWriter) MallocAck(n int) (err error) {
-	return w.buf.MallocAck(n)
-}
+func (w *zcWriter) MallocAck(n int) (err error) { _ = "STUB: not implemented"; return nil }
 
 // Append implements Writer.
-func (w *zcWriter) Append(w2 Writer) (err error) {
-	return w.buf.Append(w2)
-}
+func (w *zcWriter) Append(w2 Writer) (err error) { _ = "STUB: not implemented"; return nil }
 
 // WriteString implements Writer.
 func (w *zcWriter) WriteString(s string) (n int, err error) {
-	return w.buf.WriteString(s)
+	_ = "STUB: not implemented"
+	return 0, nil
+
+	// WriteBinary implements Writer.
 }
 
-// WriteBinary implements Writer.
 func (w *zcWriter) WriteBinary(b []byte) (n int, err error) {
-	return w.buf.WriteBinary(b)
+	_ = "STUB: not implemented"
+	return 0, nil
+
+	// WriteDirect implements Writer.
 }
 
-// WriteDirect implements Writer.
 func (w *zcWriter) WriteDirect(p []byte, remainCap int) error {
-	return w.buf.WriteDirect(p, remainCap)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // WriteByte implements Writer.
-func (w *zcWriter) WriteByte(b byte) (err error) {
-	return w.buf.WriteByte(b)
-}
+func (w *zcWriter) WriteByte(b byte) (err error) { _ = "STUB: not implemented"; return nil }
 
 // zcWriter implements ReadWriter.
 type zcReadWriter struct {
@@ -216,11 +139,7 @@ type zcReadWriter struct {
 	*zcWriter
 }
 
-func newIOReader(r Reader) *ioReader {
-	return &ioReader{
-		r: r,
-	}
-}
+func newIOReader(r Reader) *ioReader { _ = "STUB: not implemented"; return nil }
 
 var _ io.Reader = &ioReader{}
 
@@ -237,35 +156,11 @@ type ioReader struct {
 // BUG: Read calls Release which invalidates any slices previously returned by Next or Peek
 // on the same Reader. Do not mix Next/Peek and Read on the same Reader without first
 // calling Release.
-func (r *ioReader) Read(p []byte) (n int, err error) {
-	l := len(p)
-	if l == 0 {
-		return 0, nil
-	}
-	// read min(len(p), buffer.Len)
-	if has := r.r.Len(); has < l {
-		l = has
-	}
-	if l == 0 {
-		return 0, io.EOF
-	}
-	src, err := r.r.Next(l)
-	if err != nil {
-		return 0, err
-	}
-	n = copy(p, src)
-	err = r.r.Release()
-	if err != nil {
-		return 0, err
-	}
-	return n, nil
-}
+func (r *ioReader) Read(p []byte) (n int, err error) { _ = "STUB: not implemented"; return 0, nil }
 
-func newIOWriter(w Writer) *ioWriter {
-	return &ioWriter{
-		w: w,
-	}
-}
+// read min(len(p), buffer.Len)
+
+func newIOWriter(w Writer) *ioWriter { _ = "STUB: not implemented"; return nil }
 
 var _ io.Writer = &ioWriter{}
 
@@ -275,18 +170,7 @@ type ioWriter struct {
 }
 
 // Write implements io.Writer.
-func (w *ioWriter) Write(p []byte) (n int, err error) {
-	dst, err := w.w.Malloc(len(p))
-	if err != nil {
-		return 0, err
-	}
-	n = copy(dst, p)
-	err = w.w.Flush()
-	if err != nil {
-		return 0, err
-	}
-	return n, nil
-}
+func (w *ioWriter) Write(p []byte) (n int, err error) { _ = "STUB: not implemented"; return 0, nil }
 
 // ioReadWriter implements io.ReadWriter.
 type ioReadWriter struct {

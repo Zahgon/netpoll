@@ -14,11 +14,6 @@
 
 package netpoll
 
-import (
-	"runtime"
-	"sync/atomic"
-)
-
 // FDOperator is a collection of operations on file descriptors.
 type FDOperator struct {
 	// FD is file descriptor, poll will bind when register.
@@ -52,52 +47,18 @@ type FDOperator struct {
 	index int32 // index in operatorCache
 }
 
-func (op *FDOperator) Control(event PollEvent) error {
-	if event == PollDetach && atomic.AddInt32(&op.detached, 1) > 1 {
-		return nil
-	}
-	return op.poll.Control(op, event)
-}
+func (op *FDOperator) Control(event PollEvent) error { _ = "STUB: not implemented"; return nil }
 
-func (op *FDOperator) Free() {
-	op.poll.Free(op)
-}
+func (op *FDOperator) Free() { _ = "STUB: not implemented"; return }
 
-func (op *FDOperator) do() (can bool) {
-	return atomic.CompareAndSwapInt32(&op.state, 1, 2)
-}
+func (op *FDOperator) do() (can bool) { _ = "STUB: not implemented"; return false }
 
-func (op *FDOperator) done() {
-	atomic.StoreInt32(&op.state, 1)
-}
+func (op *FDOperator) done() { _ = "STUB: not implemented"; return }
 
-func (op *FDOperator) inuse() {
-	for !atomic.CompareAndSwapInt32(&op.state, 0, 1) {
-		if atomic.LoadInt32(&op.state) == 1 {
-			return
-		}
-		runtime.Gosched()
-	}
-}
+func (op *FDOperator) inuse() { _ = "STUB: not implemented"; return }
 
-func (op *FDOperator) unused() {
-	for !atomic.CompareAndSwapInt32(&op.state, 1, 0) {
-		if atomic.LoadInt32(&op.state) == 0 {
-			return
-		}
-		runtime.Gosched()
-	}
-}
+func (op *FDOperator) unused() { _ = "STUB: not implemented"; return }
 
-func (op *FDOperator) isUnused() bool {
-	return atomic.LoadInt32(&op.state) == 0
-}
+func (op *FDOperator) isUnused() bool { _ = "STUB: not implemented"; return false }
 
-func (op *FDOperator) reset() {
-	op.FD = 0
-	op.OnRead, op.OnWrite, op.OnHup = nil, nil, nil
-	op.Inputs, op.InputAck = nil, nil
-	op.Outputs, op.OutputAck = nil, nil
-	op.poll = nil
-	op.detached = 0
-}
+func (op *FDOperator) reset() { _ = "STUB: not implemented"; return }

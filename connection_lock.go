@@ -14,11 +14,6 @@
 
 package netpoll
 
-import (
-	"runtime"
-	"sync/atomic"
-)
-
 type who = int32
 
 const (
@@ -58,36 +53,18 @@ type locker struct {
 	keychain [total]int32
 }
 
-func (l *locker) closeBy(w who) (success bool) {
-	return atomic.CompareAndSwapInt32(&l.keychain[closing], 0, w)
-}
+func (l *locker) closeBy(w who) (success bool) { _ = "STUB: not implemented"; return false }
 
-func (l *locker) isCloseBy(w who) (yes bool) {
-	return atomic.LoadInt32(&l.keychain[closing]) == w
-}
+func (l *locker) isCloseBy(w who) (yes bool) { _ = "STUB: not implemented"; return false }
 
-func (l *locker) status(k key) int32 {
-	return atomic.LoadInt32(&l.keychain[k])
-}
+func (l *locker) status(k key) int32 { _ = "STUB: not implemented"; return 0 }
 
-func (l *locker) force(k key, v int32) {
-	atomic.StoreInt32(&l.keychain[k], v)
-}
+func (l *locker) force(k key, v int32) { _ = "STUB: not implemented"; return }
 
-func (l *locker) lock(k key) (success bool) {
-	return atomic.CompareAndSwapInt32(&l.keychain[k], 0, 1)
-}
+func (l *locker) lock(k key) (success bool) { _ = "STUB: not implemented"; return false }
 
-func (l *locker) unlock(k key) {
-	atomic.StoreInt32(&l.keychain[k], 0)
-}
+func (l *locker) unlock(k key) { _ = "STUB: not implemented"; return }
 
-func (l *locker) stop(k key) {
-	for !atomic.CompareAndSwapInt32(&l.keychain[k], 0, 2) && atomic.LoadInt32(&l.keychain[k]) != 2 {
-		runtime.Gosched()
-	}
-}
+func (l *locker) stop(k key) { _ = "STUB: not implemented"; return }
 
-func (l *locker) isUnlock(k key) bool {
-	return atomic.LoadInt32(&l.keychain[k]) == 0
-}
+func (l *locker) isUnlock(k key) bool { _ = "STUB: not implemented"; return false }

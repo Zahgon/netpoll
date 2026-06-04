@@ -30,171 +30,112 @@ type SafeLinkBuffer struct {
 
 // ------------------------------------------ implement copy reader ------------------------------------------
 
-func (b *SafeLinkBuffer) readCopy(p []byte) int {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.readCopy(p)
-}
+func (b *SafeLinkBuffer) readCopy(p []byte) int { _ = "STUB: not implemented"; return 0 }
 
 // ------------------------------------------ implement zero-copy reader ------------------------------------------
 
 // Next implements Reader.
 func (b *SafeLinkBuffer) Next(n int) (p []byte, err error) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.Next(n)
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // Peek implements Reader.
 func (b *SafeLinkBuffer) Peek(n int) (p []byte, err error) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.Peek(n)
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // Skip implements Reader.
-func (b *SafeLinkBuffer) Skip(n int) (err error) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.Skip(n)
-}
+func (b *SafeLinkBuffer) Skip(n int) (err error) { _ = "STUB: not implemented"; return nil }
 
 // Until implements Reader.
 func (b *SafeLinkBuffer) Until(delim byte) (line []byte, err error) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.Until(delim)
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // Release implements Reader.
-func (b *SafeLinkBuffer) Release() (err error) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.Release()
-}
+func (b *SafeLinkBuffer) Release() (err error) { _ = "STUB: not implemented"; return nil }
 
 // ReadString implements Reader.
 func (b *SafeLinkBuffer) ReadString(n int) (s string, err error) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.ReadString(n)
+	_ = "STUB: not implemented"
+	return "", nil
 }
 
 // ReadBinary implements Reader.
 func (b *SafeLinkBuffer) ReadBinary(n int) (p []byte, err error) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.ReadBinary(n)
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // ReadByte implements Reader.
-func (b *SafeLinkBuffer) ReadByte() (p byte, err error) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.ReadByte()
-}
+func (b *SafeLinkBuffer) ReadByte() (p byte, err error) { _ = "STUB: not implemented"; return 0, nil }
 
 // Slice implements Reader.
 func (b *SafeLinkBuffer) Slice(n int) (r Reader, err error) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.Slice(n)
+	_ = "STUB: not implemented"
+	return *new(Reader), nil
 }
 
 // ------------------------------------------ implement zero-copy writer ------------------------------------------
 
 // Malloc implements Writer.
 func (b *SafeLinkBuffer) Malloc(n int) (buf []byte, err error) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.Malloc(n)
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // MallocLen implements Writer.
-func (b *SafeLinkBuffer) MallocLen() (length int) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.MallocLen()
-}
+func (b *SafeLinkBuffer) MallocLen() (length int) { _ = "STUB: not implemented"; return 0 }
 
 // MallocAck implements Writer.
-func (b *SafeLinkBuffer) MallocAck(n int) (err error) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.MallocAck(n)
-}
+func (b *SafeLinkBuffer) MallocAck(n int) (err error) { _ = "STUB: not implemented"; return nil }
 
 // Flush implements Writer.
-func (b *SafeLinkBuffer) Flush() (err error) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.Flush()
-}
+func (b *SafeLinkBuffer) Flush() (err error) { _ = "STUB: not implemented"; return nil }
 
 // Append implements Writer.
-func (b *SafeLinkBuffer) Append(w Writer) (err error) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.Append(w)
-}
+func (b *SafeLinkBuffer) Append(w Writer) (err error) { _ = "STUB: not implemented"; return nil }
 
 // WriteBuffer implements Writer.
 func (b *SafeLinkBuffer) WriteBuffer(buf *LinkBuffer) (err error) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.WriteBuffer(buf)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // WriteString implements Writer.
 func (b *SafeLinkBuffer) WriteString(s string) (n int, err error) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.WriteString(s)
+	_ = "STUB: not implemented"
+	return 0, nil
 }
 
 // WriteBinary implements Writer.
 func (b *SafeLinkBuffer) WriteBinary(p []byte) (n int, err error) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.WriteBinary(p)
+	_ = "STUB: not implemented"
+	return 0, nil
 }
 
 // WriteDirect cannot be mixed with WriteString or WriteBinary functions.
 func (b *SafeLinkBuffer) WriteDirect(p []byte, remainLen int) error {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.WriteDirect(p, remainLen)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // WriteByte implements Writer.
-func (b *SafeLinkBuffer) WriteByte(p byte) (err error) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.WriteByte(p)
-}
+func (b *SafeLinkBuffer) WriteByte(p byte) (err error) { _ = "STUB: not implemented"; return nil }
 
 // Close will recycle all buffer.
-func (b *SafeLinkBuffer) Close() (err error) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.Close()
-}
+func (b *SafeLinkBuffer) Close() (err error) { _ = "STUB: not implemented"; return nil }
 
 // ------------------------------------------ implement connection interface ------------------------------------------
 
 // Bytes returns all the readable bytes of this SafeLinkBuffer.
-func (b *SafeLinkBuffer) Bytes() []byte {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.Bytes()
-}
+func (b *SafeLinkBuffer) Bytes() []byte { _ = "STUB: not implemented"; return nil }
 
 // GetBytes will read and fill the slice p as much as possible.
-func (b *SafeLinkBuffer) GetBytes(p [][]byte) (vs [][]byte) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.GetBytes(p)
-}
+func (b *SafeLinkBuffer) GetBytes(p [][]byte) (vs [][]byte) { _ = "STUB: not implemented"; return nil }
 
 // book will grow and malloc buffer to hold data.
 //
@@ -203,35 +144,21 @@ func (b *SafeLinkBuffer) GetBytes(p [][]byte) (vs [][]byte) {
 //
 //	guarantee all data allocated in one node to reduce copy.
 func (b *SafeLinkBuffer) book(bookSize, maxSize int) (p []byte) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.book(bookSize, maxSize)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // bookAck will ack the first n malloc bytes and discard the rest.
 //
 // length: The size of data in inputBuffer. It is used to calculate the maxSize
 func (b *SafeLinkBuffer) bookAck(n int) (length int, err error) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.bookAck(n)
+	_ = "STUB: not implemented"
+	return 0, nil
 }
 
 // calcMaxSize will calculate the data size between two Release()
-func (b *SafeLinkBuffer) calcMaxSize() (sum int) {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.calcMaxSize()
-}
+func (b *SafeLinkBuffer) calcMaxSize() (sum int) { _ = "STUB: not implemented"; return 0 }
 
-func (b *SafeLinkBuffer) resetTail(maxSize int) {
-	b.Lock()
-	defer b.Unlock()
-	b.UnsafeLinkBuffer.resetTail(maxSize)
-}
+func (b *SafeLinkBuffer) resetTail(maxSize int) { _ = "STUB: not implemented"; return }
 
-func (b *SafeLinkBuffer) indexByte(c byte, skip int) int {
-	b.Lock()
-	defer b.Unlock()
-	return b.UnsafeLinkBuffer.indexByte(c, skip)
-}
+func (b *SafeLinkBuffer) indexByte(c byte, skip int) int { _ = "STUB: not implemented"; return 0 }

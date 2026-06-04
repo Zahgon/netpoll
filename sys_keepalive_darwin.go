@@ -14,17 +14,7 @@
 
 package netpoll
 
-import "syscall"
-
 // SetKeepAlive sets the keepalive for the connection
-func SetKeepAlive(fd, secs int) error {
-	if err := syscall.SetsockoptInt(fd, syscall.SOL_SOCKET, syscall.SO_KEEPALIVE, 1); err != nil {
-		return err
-	}
-	switch err := syscall.SetsockoptInt(fd, syscall.IPPROTO_TCP, 0x101, secs); err {
-	case nil, syscall.ENOPROTOOPT: // OS X 10.7 and earlier don't support this option
-	default:
-		return err
-	}
-	return syscall.SetsockoptInt(fd, syscall.IPPROTO_TCP, syscall.TCP_KEEPALIVE, secs)
-}
+func SetKeepAlive(fd, secs int) error { _ = "STUB: not implemented"; return nil }
+
+// OS X 10.7 and earlier don't support this option

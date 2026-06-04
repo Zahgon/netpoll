@@ -23,25 +23,34 @@ import (
 
 // Configure the internal behaviors of netpoll.
 func Configure(config Config) (err error) {
+	_ = "STUB: not implemented"
+
+	// NewDialer only support TCP and unix socket now.
 	return nil
 }
 
-// NewDialer only support TCP and unix socket now.
 func NewDialer() Dialer {
-	return nil
+	_ = "STUB: not implemented"
+
+	// NewEventLoop .
+	return *new(Dialer)
 }
 
-// NewEventLoop .
 func NewEventLoop(onRequest OnRequest, ops ...Option) (EventLoop, error) {
-	return nil, nil
+	_ = "STUB: not implemented"
+
+	// ConvertListener converts net.Listener to Listener
+	return *new(EventLoop), nil
 }
 
-// ConvertListener converts net.Listener to Listener
 func ConvertListener(l net.Listener) (nl Listener, err error) {
-	return nil, nil
+	_ = "STUB: not implemented"
+
+	// CreateListener return a new Listener.
+	return *new(Listener), nil
 }
 
-// CreateListener return a new Listener.
 func CreateListener(network, addr string) (l Listener, err error) {
-	return nil, nil
+	_ = "STUB: not implemented"
+	return *new(Listener), nil
 }

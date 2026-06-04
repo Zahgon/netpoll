@@ -16,6 +16,7 @@ package netpoll
 
 // SetKeepAlive sets the keepalive for the connection
 func SetKeepAlive(fd, secs int) error {
+	_ = "STUB: not implemented"
 	// OpenBSD has no user-settable per-socket TCP keepalive options.
 	return nil
 }

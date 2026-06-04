@@ -17,38 +17,22 @@
 package netpoll
 
 import (
-	"errors"
 	"net"
 	"os"
-	"syscall"
 )
 
 // CreateListener return a new Listener.
 func CreateListener(network, addr string) (l Listener, err error) {
-	if network == "udp" || network == "udp4" || network == "udp6" {
-		return nil, Exception(ErrUnsupported, "UDP")
-	}
-	// tcp, tcp4, tcp6, unix
-	ln, err := net.Listen(network, addr)
-	if err != nil {
-		return nil, err
-	}
-	return ConvertListener(ln)
+	_ = "STUB: not implemented"
+	return *new(Listener), nil
 }
+
+// tcp, tcp4, tcp6, unix
 
 // ConvertListener converts net.Listener to Listener
 func ConvertListener(l net.Listener) (nl Listener, err error) {
-	if tmp, ok := l.(Listener); ok {
-		return tmp, nil
-	}
-	ln := &listener{}
-	ln.ln = l
-	ln.addr = l.Addr()
-	err = ln.parseFD()
-	if err != nil {
-		return nil, err
-	}
-	return ln, syscall.SetNonblock(ln.fd, true)
+	_ = "STUB: not implemented"
+	return *new(Listener), nil
 }
 
 var _ net.Listener = &listener{}
@@ -62,65 +46,30 @@ type listener struct {
 
 // Accept implements Listener.
 func (ln *listener) Accept() (net.Conn, error) {
-	fd, sa, err := syscall.Accept(ln.fd)
-	if err != nil {
-		/* https://man7.org/linux/man-pages/man2/accept.2.html
-		EAGAIN or EWOULDBLOCK
-		  The socket is marked nonblocking and no connections are
-		  present to be accepted.  POSIX.1-2001 and POSIX.1-2008
-		  allow either error to be returned for this case, and do
-		  not require these constants to have the same value, so a
-		  portable application should check for both possibilities.
-		*/
-		if err == syscall.EAGAIN || err == syscall.EWOULDBLOCK {
-			return nil, nil
-		}
-		return nil, err
-	}
-	nfd := &netFD{}
-	nfd.fd = fd
-	nfd.localAddr = ln.addr
-	nfd.network = ln.addr.Network()
-	nfd.remoteAddr = sockaddrToAddr(sa)
-	return nfd, nil
+	_ = "STUB: not implemented"
+	return *new(net.Conn), nil
 }
 
+/* https://man7.org/linux/man-pages/man2/accept.2.html
+EAGAIN or EWOULDBLOCK
+  The socket is marked nonblocking and no connections are
+  present to be accepted.  POSIX.1-2001 and POSIX.1-2008
+  allow either error to be returned for this case, and do
+  not require these constants to have the same value, so a
+  portable application should check for both possibilities.
+*/
+
 // Close implements Listener.
-func (ln *listener) Close() error {
-	if ln.fd != 0 {
-		syscall.Close(ln.fd)
-	}
-	if ln.file != nil {
-		ln.file.Close()
-	}
-	if ln.ln != nil {
-		ln.ln.Close()
-	}
-	return nil
-}
+func (ln *listener) Close() error { _ = "STUB: not implemented"; return nil }
 
 // Addr implements Listener.
 func (ln *listener) Addr() net.Addr {
-	return ln.addr
+	_ = "STUB: not implemented"
+
+	// Fd implements Listener.
+	return *new(net.Addr)
 }
 
-// Fd implements Listener.
-func (ln *listener) Fd() (fd int) {
-	return ln.fd
-}
+func (ln *listener) Fd() (fd int) { _ = "STUB: not implemented"; return 0 }
 
-func (ln *listener) parseFD() (err error) {
-	switch netln := ln.ln.(type) {
-	case *net.TCPListener:
-		ln.file, err = netln.File()
-	case *net.UnixListener:
-		ln.file, err = netln.File()
-	default:
-		return errors.New("listener type can't support")
-	}
-	if err != nil {
-		return err
-	}
-	ln.fd = int(ln.file.Fd())
-	return nil
-}
+func (ln *listener) parseFD() (err error) { _ = "STUB: not implemented"; return nil }

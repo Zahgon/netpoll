@@ -16,62 +16,18 @@
 
 package netpoll
 
-func (p *defaultPoll) Alloc() (operator *FDOperator) {
-	op := p.opcache.alloc()
-	op.poll = p
-	return op
-}
+func (p *defaultPoll) Alloc() (operator *FDOperator) { _ = "STUB: not implemented"; return nil }
 
-func (p *defaultPoll) Free(operator *FDOperator) {
-	p.opcache.freeable(operator)
-}
+func (p *defaultPoll) Free(operator *FDOperator) { _ = "STUB: not implemented"; return }
 
-func (p *defaultPoll) appendHup(operator *FDOperator) {
-	p.hups = append(p.hups, operator.OnHup)
-	p.detach(operator)
-	operator.done()
-}
+func (p *defaultPoll) appendHup(operator *FDOperator) { _ = "STUB: not implemented"; return }
 
-func (p *defaultPoll) detach(operator *FDOperator) {
-	if err := operator.Control(PollDetach); err != nil {
-		logger.Printf("NETPOLL: poller detach operator failed: %v", err)
-	}
-}
+func (p *defaultPoll) detach(operator *FDOperator) { _ = "STUB: not implemented"; return }
 
-func (p *defaultPoll) onhups() {
-	if len(p.hups) == 0 {
-		return
-	}
-	hups := p.hups
-	p.hups = nil
-	go func(onhups []func(p Poll) error) {
-		for i := range onhups {
-			if onhups[i] != nil {
-				onhups[i](p)
-			}
-		}
-	}(hups)
-}
+func (p *defaultPoll) onhups() { _ = "STUB: not implemented"; return }
 
 // readall read all left data before close connection
 func readall(op *FDOperator, br barrier) (total int, err error) {
-	ivs := br.ivs
-	var n int
-	for {
-		bs := op.Inputs(br.bs)
-		if len(bs) == 0 {
-			return total, nil
-		}
-
-	TryRead:
-		n, err = ioread(op.FD, bs, ivs)
-		op.InputAck(n)
-		total += n
-		if err != nil {
-			return total, err
-		}
-		if n == 0 {
-			goto TryRead
-		}
-	}
+	_ = "STUB: not implemented"
+	return 0, nil
 }

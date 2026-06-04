@@ -16,9 +16,6 @@ package netpoll
 
 import (
 	"io"
-
-	"github.com/bytedance/gopkg/lang/dirtmake"
-	"github.com/bytedance/gopkg/lang/mcache"
 )
 
 // Reader is a collection of operations for nocopy reads.
@@ -203,47 +200,33 @@ type ReadWriter interface {
 
 // NewReader convert io.Reader to nocopy Reader
 func NewReader(r io.Reader) Reader {
-	return newZCReader(r)
+	_ = "STUB: not implemented"
+	return *
+
+	// NewWriter convert io.Writer to nocopy Writer
+	new(Reader)
 }
 
-// NewWriter convert io.Writer to nocopy Writer
 func NewWriter(w io.Writer) Writer {
-	return newZCWriter(w)
+	_ = "STUB: not implemented"
+	return *
+
+	// NewReadWriter convert io.ReadWriter to nocopy ReadWriter
+	new(Writer)
 }
 
-// NewReadWriter convert io.ReadWriter to nocopy ReadWriter
-func NewReadWriter(rw io.ReadWriter) ReadWriter {
-	return &zcReadWriter{
-		zcReader: newZCReader(rw),
-		zcWriter: newZCWriter(rw),
-	}
-}
+func NewReadWriter(rw io.ReadWriter) ReadWriter { _ = "STUB: not implemented"; return *new(ReadWriter) }
 
 // NewIOReader convert Reader to io.Reader
-func NewIOReader(r Reader) io.Reader {
-	if reader, ok := r.(io.Reader); ok {
-		return reader
-	}
-	return newIOReader(r)
-}
+func NewIOReader(r Reader) io.Reader { _ = "STUB: not implemented"; return *new(io.Reader) }
 
 // NewIOWriter convert Writer to io.Writer
-func NewIOWriter(w Writer) io.Writer {
-	if writer, ok := w.(io.Writer); ok {
-		return writer
-	}
-	return newIOWriter(w)
-}
+func NewIOWriter(w Writer) io.Writer { _ = "STUB: not implemented"; return *new(io.Writer) }
 
 // NewIOReadWriter convert ReadWriter to io.ReadWriter
 func NewIOReadWriter(rw ReadWriter) io.ReadWriter {
-	if rwer, ok := rw.(io.ReadWriter); ok {
-		return rwer
-	}
-	return &ioReadWriter{
-		Reader: NewIOReader(rw),
-		Writer: NewIOWriter(rw),
-	}
+	_ = "STUB: not implemented"
+	return *new(io.ReadWriter)
 }
 
 const (
@@ -268,17 +251,7 @@ const (
 )
 
 // malloc limits the cap of the buffer from mcache.
-func malloc(size, capacity int) []byte {
-	if capacity > mallocMax {
-		return dirtmake.Bytes(size, capacity)
-	}
-	return mcache.Malloc(size, capacity)
-}
+func malloc(size, capacity int) []byte { _ = "STUB: not implemented"; return nil }
 
 // free limits the cap of the buffer from mcache.
-func free(buf []byte) {
-	if cap(buf) > mallocMax {
-		return
-	}
-	mcache.Free(buf)
-}
+func free(buf []byte) { _ = "STUB: not implemented"; return }

@@ -20,18 +20,7 @@ import (
 	"context"
 )
 
-func newPollDesc(fd int) *pollDesc {
-	pd := &pollDesc{}
-	poll := pollmanager.Pick()
-	pd.operator = poll.Alloc()
-	pd.operator.poll = poll
-	pd.operator.FD = fd
-	pd.operator.OnWrite = pd.onwrite
-	pd.operator.OnHup = pd.onhup
-	pd.writeTrigger = make(chan struct{})
-	pd.closeTrigger = make(chan struct{})
-	return pd
-}
+func newPollDesc(fd int) *pollDesc { _ = "STUB: not implemented"; return nil }
 
 type pollDesc struct {
 	operator *FDOperator
@@ -42,54 +31,23 @@ type pollDesc struct {
 
 // WaitWrite .
 func (pd *pollDesc) WaitWrite(ctx context.Context) (err error) {
-	if pd.operator.isUnused() {
-		// add ET|Write|Hup
-		if err = pd.operator.Control(PollWritable); err != nil {
-			logger.Printf("NETPOLL: pollDesc register operator failed: %v", err)
-			return err
-		}
-	}
-
-	select {
-	case <-pd.writeTrigger: // triggered by poller
-	case <-pd.closeTrigger: // triggered by poller
-		// no need to detach, since poller has done it in OnHup.
-		return Exception(ErrConnClosed, "by peer")
-	case <-ctx.Done(): // triggered by ctx
-		// deregister from poller, upper caller function will close fd
-		pd.detach()
-		return mapErr(ctx.Err())
-	}
-	// double check close trigger
-	select {
-	case <-pd.closeTrigger:
-		return Exception(ErrConnClosed, "by peer")
-	default:
-		return nil
-	}
-}
-
-func (pd *pollDesc) onwrite(p Poll) error {
-	select {
-	case <-pd.writeTrigger:
-	default:
-		pd.detach()
-		close(pd.writeTrigger)
-	}
+	_ = "STUB: not implemented"
 	return nil
+
+	// add ET|Write|Hup
 }
 
-func (pd *pollDesc) onhup(p Poll) error {
-	select {
-	case <-pd.closeTrigger:
-	default:
-		close(pd.closeTrigger)
-	}
-	return nil
-}
+// triggered by poller
+// triggered by poller
+// no need to detach, since poller has done it in OnHup.
 
-func (pd *pollDesc) detach() {
-	if err := pd.operator.Control(PollDetach); err != nil {
-		logger.Printf("NETPOLL: pollDesc detach operator failed: %v", err)
-	}
-}
+// triggered by ctx
+// deregister from poller, upper caller function will close fd
+
+// double check close trigger
+
+func (pd *pollDesc) onwrite(p Poll) error { _ = "STUB: not implemented"; return nil }
+
+func (pd *pollDesc) onhup(p Poll) error { _ = "STUB: not implemented"; return nil }
+
+func (pd *pollDesc) detach() { _ = "STUB: not implemented"; return }

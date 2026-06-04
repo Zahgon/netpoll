@@ -17,36 +17,12 @@
 package netpoll
 
 import (
-	"errors"
 	"sync"
-	"sync/atomic"
-	"syscall"
-	"unsafe"
 )
 
-func openPoll() (Poll, error) {
-	return openDefaultPoll()
-}
+func openPoll() (Poll, error) { _ = "STUB: not implemented"; return *new(Poll), nil }
 
-func openDefaultPoll() (*defaultPoll, error) {
-	l := new(defaultPoll)
-	p, err := syscall.Kqueue()
-	if err != nil {
-		return nil, err
-	}
-	l.fd = p
-	_, err = syscall.Kevent(l.fd, []syscall.Kevent_t{{
-		Ident:  0,
-		Filter: syscall.EVFILT_USER,
-		Flags:  syscall.EV_ADD | syscall.EV_CLEAR,
-	}}, nil, nil)
-	if err != nil {
-		syscall.Close(l.fd)
-		return nil, err
-	}
-	l.opcache = newOperatorCache()
-	return l, nil
-}
+func openDefaultPoll() (*defaultPoll, error) { _ = "STUB: not implemented"; return nil, nil }
 
 type defaultPoll struct {
 	fd      int
@@ -58,145 +34,45 @@ type defaultPoll struct {
 
 // Wait implements Poll.
 func (p *defaultPoll) Wait() error {
+	_ = "STUB: not implemented"
 	// init
-	size, caps := 1024, barriercap
-	events, barriers := make([]syscall.Kevent_t, size), make([]barrier, size)
-	for i := range barriers {
-		barriers[i].bs = make([][]byte, caps)
-		barriers[i].ivs = make([]syscall.Iovec, caps)
-	}
-	// wait
-	var triggerRead, triggerWrite, triggerHup bool
-	for {
-		n, err := syscall.Kevent(p.fd, nil, events, nil)
-		if err != nil && err != syscall.EINTR {
-			// exit gracefully
-			if err == syscall.EBADF {
-				return nil
-			}
-			return err
-		}
-		for i := 0; i < n; i++ {
-			fd := int(events[i].Ident)
-			// trigger
-			if fd == 0 {
-				// clean trigger
-				atomic.StoreUint32(&p.trigger, 0)
-				continue
-			}
-			operator := p.getOperator(fd, unsafe.Pointer(&events[i].Udata))
-			if operator == nil || !operator.do() {
-				continue
-			}
-
-			var totalRead int
-			evt := events[i]
-			triggerRead = evt.Filter == syscall.EVFILT_READ && evt.Flags&syscall.EV_ENABLE != 0
-			triggerWrite = evt.Filter == syscall.EVFILT_WRITE && evt.Flags&syscall.EV_ENABLE != 0
-			triggerHup = evt.Flags&syscall.EV_EOF != 0
-
-			if triggerRead {
-				if operator.OnRead != nil {
-					// for non-connection
-					operator.OnRead(p)
-				} else {
-					// only for connection
-					bs := operator.Inputs(barriers[i].bs)
-					if len(bs) > 0 {
-						n, err := ioread(operator.FD, bs, barriers[i].ivs)
-						operator.InputAck(n)
-						totalRead += n
-						if err != nil {
-							p.appendHup(operator)
-							continue
-						}
-					}
-				}
-			}
-			if triggerHup {
-				if triggerRead && operator.Inputs != nil {
-					var leftRead int
-					// read all left data if peer send and close
-					if leftRead, err = readall(operator, barriers[i]); err != nil && !errors.Is(err, ErrEOF) {
-						logger.Printf("NETPOLL: readall(fd=%d)=%d before close: %s", operator.FD, total, err.Error())
-					}
-					totalRead += leftRead
-				}
-				// only close connection if no further read bytes
-				if totalRead == 0 {
-					p.appendHup(operator)
-					continue
-				}
-			}
-			if triggerWrite {
-				if operator.OnWrite != nil {
-					// for non-connection
-					operator.OnWrite(p)
-				} else {
-					// only for connection
-					bs, supportZeroCopy := operator.Outputs(barriers[i].bs)
-					if len(bs) > 0 {
-						// TODO: Let the upper layer pass in whether to use ZeroCopy.
-						n, err := iosend(operator.FD, bs, barriers[i].ivs, false && supportZeroCopy)
-						operator.OutputAck(n)
-						if err != nil {
-							p.appendHup(operator)
-							continue
-						}
-					}
-				}
-			}
-			operator.done()
-		}
-		// hup conns together to avoid blocking the poll.
-		p.onhups()
-		p.opcache.free()
-	}
+	return nil
 }
+
+// wait
+
+// exit gracefully
+
+// trigger
+
+// clean trigger
+
+// for non-connection
+
+// only for connection
+
+// read all left data if peer send and close
+
+// only close connection if no further read bytes
+
+// for non-connection
+
+// only for connection
+
+// TODO: Let the upper layer pass in whether to use ZeroCopy.
+
+// hup conns together to avoid blocking the poll.
 
 // TODO: Close will bad file descriptor here
-func (p *defaultPoll) Close() error {
-	err := syscall.Close(p.fd)
-	return err
-}
+func (p *defaultPoll) Close() error { _ = "STUB: not implemented"; return nil }
 
 // Trigger implements Poll.
-func (p *defaultPoll) Trigger() error {
-	if atomic.AddUint32(&p.trigger, 1) > 1 {
-		return nil
-	}
-	_, err := syscall.Kevent(p.fd, []syscall.Kevent_t{{
-		Ident:  0,
-		Filter: syscall.EVFILT_USER,
-		Fflags: syscall.NOTE_TRIGGER,
-	}}, nil, nil)
-	return err
-}
+func (p *defaultPoll) Trigger() error { _ = "STUB: not implemented"; return nil }
 
 // Control implements Poll.
 func (p *defaultPoll) Control(operator *FDOperator, event PollEvent) error {
-	evs := make([]syscall.Kevent_t, 1)
-	evs[0].Ident = uint64(operator.FD)
-	p.setOperator(unsafe.Pointer(&evs[0].Udata), operator)
-	switch event {
-	case PollReadable:
-		operator.inuse()
-		evs[0].Filter, evs[0].Flags = syscall.EVFILT_READ, syscall.EV_ADD|syscall.EV_ENABLE
-	case PollWritable:
-		operator.inuse()
-		evs[0].Filter, evs[0].Flags = syscall.EVFILT_WRITE, syscall.EV_ADD|syscall.EV_ENABLE
-	case PollDetach:
-		if operator.OnWrite != nil { // means WaitWrite finished
-			evs[0].Filter, evs[0].Flags = syscall.EVFILT_WRITE, syscall.EV_DELETE
-		} else {
-			evs[0].Filter, evs[0].Flags = syscall.EVFILT_READ, syscall.EV_DELETE
-		}
-		p.delOperator(operator)
-	case PollR2RW:
-		evs[0].Filter, evs[0].Flags = syscall.EVFILT_WRITE, syscall.EV_ADD|syscall.EV_ENABLE
-	case PollRW2R:
-		evs[0].Filter, evs[0].Flags = syscall.EVFILT_WRITE, syscall.EV_DELETE
-	}
-	_, err := syscall.Kevent(p.fd, evs, nil, nil)
-	return err
+	_ = "STUB: not implemented"
+	return nil
 }
+
+// means WaitWrite finished

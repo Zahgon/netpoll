@@ -19,12 +19,13 @@ package netpoll
 import "unsafe"
 
 func (p *defaultPoll) getOperator(fd int, ptr unsafe.Pointer) *FDOperator {
-	return *(**FDOperator)(ptr)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 func (p *defaultPoll) setOperator(ptr unsafe.Pointer, operator *FDOperator) {
-	*(**FDOperator)(ptr) = operator
+	_ = "STUB: not implemented"
+	return
 }
 
-func (p *defaultPoll) delOperator(operator *FDOperator) {
-}
+func (p *defaultPoll) delOperator(operator *FDOperator) { _ = "STUB: not implemented"; return }

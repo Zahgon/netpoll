@@ -11,7 +11,6 @@ package netpoll
 
 import (
 	"context"
-	"errors"
 	"net"
 	"syscall"
 )
@@ -27,44 +26,32 @@ type UnixAddr struct {
 	net.UnixAddr
 }
 
-func (a *UnixAddr) isWildcard() bool {
-	return a == nil || a.Name == ""
-}
+func (a *UnixAddr) isWildcard() bool { _ = "STUB: not implemented"; return false }
 
-func (a *UnixAddr) opAddr() net.Addr {
-	if a == nil {
-		return nil
-	}
-	return a
-}
+func (a *UnixAddr) opAddr() net.Addr { _ = "STUB: not implemented"; return *new(net.Addr) }
 
-func (a *UnixAddr) family() int {
-	return syscall.AF_UNIX
-}
+func (a *UnixAddr) family() int { _ = "STUB: not implemented"; return 0 }
 
 func (a *UnixAddr) sockaddr(family int) (syscall.Sockaddr, error) {
-	if a == nil {
-		return nil, nil
-	}
-	return &syscall.SockaddrUnix{Name: a.Name}, nil
+	_ = "STUB: not implemented"
+	return *new(syscall.Sockaddr), nil
 }
 
 func (a *UnixAddr) toLocal(net string) sockaddr {
-	return a
+	_ = "STUB: not implemented"
+
+	// ResolveUnixAddr returns an address of Unix domain socket end point.
+	//
+	// The network must be a Unix network name.
+	//
+	// See func Dial for a description of the network and address
+	// parameters.
+	return *new(sockaddr)
 }
 
-// ResolveUnixAddr returns an address of Unix domain socket end point.
-//
-// The network must be a Unix network name.
-//
-// See func Dial for a description of the network and address
-// parameters.
 func ResolveUnixAddr(network, address string) (*UnixAddr, error) {
-	addr, err := net.ResolveUnixAddr(network, address)
-	if err != nil {
-		return nil, err
-	}
-	return &UnixAddr{*addr}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // UnixConnection implements Connection.
@@ -74,12 +61,8 @@ type UnixConnection struct {
 
 // newUnixConnection wraps UnixConnection.
 func newUnixConnection(conn Conn) (connection *UnixConnection, err error) {
-	connection = &UnixConnection{}
-	err = connection.init(conn, nil)
-	if err != nil {
-		return nil, err
-	}
-	return connection, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // DialUnix acts like Dial for Unix networks.
@@ -89,55 +72,16 @@ func newUnixConnection(conn Conn) (connection *UnixConnection, err error) {
 // If laddr is non-nil, it is used as the local address for the
 // connection.
 func DialUnix(network string, laddr, raddr *UnixAddr) (*UnixConnection, error) {
-	switch network {
-	case "unix", "unixgram", "unixpacket":
-	default:
-		return nil, &net.OpError{Op: "dial", Net: network, Source: laddr.opAddr(), Addr: raddr.opAddr(), Err: net.UnknownNetworkError(network)}
-	}
-	sd := &sysDialer{network: network, address: raddr.String()}
-	c, err := sd.dialUnix(context.Background(), laddr, raddr)
-	if err != nil {
-		return nil, &net.OpError{Op: "dial", Net: network, Source: laddr.opAddr(), Addr: raddr.opAddr(), Err: err}
-	}
-	return c, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 func (sd *sysDialer) dialUnix(ctx context.Context, laddr, raddr *UnixAddr) (*UnixConnection, error) {
-	conn, err := unixSocket(ctx, sd.network, laddr, raddr, "dial")
-	if err != nil {
-		return nil, err
-	}
-	return newUnixConnection(conn)
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 func unixSocket(ctx context.Context, network string, laddr, raddr sockaddr, mode string) (conn *netFD, err error) {
-	var sotype int
-	switch network {
-	case "unix":
-		sotype = syscall.SOCK_STREAM
-	case "unixgram":
-		sotype = syscall.SOCK_DGRAM
-	case "unixpacket":
-		sotype = syscall.SOCK_SEQPACKET
-	default:
-		return nil, net.UnknownNetworkError(network)
-	}
-
-	switch mode {
-	case "dial":
-		if laddr != nil && laddr.isWildcard() {
-			laddr = nil
-		}
-		if raddr != nil && raddr.isWildcard() {
-			raddr = nil
-		}
-		if raddr == nil && (sotype != syscall.SOCK_DGRAM || laddr == nil) {
-			return nil, errMissingAddress
-		}
-	case "listen":
-	default:
-		return nil, errors.New("unknown mode: " + mode)
-	}
-
-	return socket(ctx, network, syscall.AF_UNIX, sotype, 0, false, laddr, raddr)
+	_ = "STUB: not implemented"
+	return nil, nil
 }

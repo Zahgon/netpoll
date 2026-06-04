@@ -12,7 +12,6 @@ package netpoll
 import (
 	"context"
 	"net"
-	"runtime"
 	"syscall"
 )
 
@@ -39,11 +38,8 @@ type sockaddr interface {
 }
 
 func internetSocket(ctx context.Context, net string, laddr, raddr sockaddr, sotype, proto int, mode string) (conn *netFD, err error) {
-	if (runtime.GOOS == "aix" || runtime.GOOS == "openbsd" || runtime.GOOS == "nacl") && raddr.isWildcard() {
-		raddr = raddr.toLocal(net)
-	}
-	family, ipv6only := favoriteAddrFamily(net, laddr, raddr)
-	return socket(ctx, net, family, sotype, proto, ipv6only, laddr, raddr)
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // favoriteAddrFamily returns the appropriate address family for the
@@ -86,68 +82,20 @@ func internetSocket(ctx context.Context, net string, laddr, raddr sockaddr, soty
 // neither "net.inet6.ip6.v6only=1" change nor IPPROTO_IPV6 level
 // IPV6_V6ONLY socket option setting.
 func favoriteAddrFamily(network string, laddr, raddr sockaddr) (family int, ipv6only bool) {
-	switch network[len(network)-1] {
-	case '4':
-		return syscall.AF_INET, false
-	case '6':
-		return syscall.AF_INET6, true
-	}
-	if (laddr == nil || laddr.family() == syscall.AF_INET) &&
-		(raddr == nil || raddr.family() == syscall.AF_INET) {
-		return syscall.AF_INET, false
-	}
-	return syscall.AF_INET6, false
+	_ = "STUB: not implemented"
+	return 0, false
 }
 
 // socket returns a network file descriptor that is ready for
 // asynchronous I/O using the network poller.
 func socket(ctx context.Context, net string, family, sotype, proto int, ipv6only bool, laddr, raddr sockaddr) (netfd *netFD, err error) {
+	_ = "STUB: not implemented"
 	// syscall.Socket & set socket options
-	var fd int
-	fd, err = sysSocket(family, sotype, proto)
-	if err != nil {
-		return nil, err
-	}
-	err = setDefaultSockopts(fd, family, sotype, ipv6only)
-	if err != nil {
-		syscall.Close(fd)
-		return nil, err
-	}
-
-	netfd = newNetFD(fd, family, sotype, net)
-	err = netfd.dial(ctx, laddr, raddr)
-	if err != nil {
-		netfd.Close()
-		return nil, err
-	}
-	return netfd, nil
+	return nil, nil
 }
 
 // sockaddrToAddr returns a go/net friendly address
-func sockaddrToAddr(sa syscall.Sockaddr) net.Addr {
-	var a net.Addr
-	switch sa := sa.(type) {
-	case *syscall.SockaddrInet4:
-		a = &net.TCPAddr{
-			IP:   sa.Addr[0:],
-			Port: sa.Port,
-		}
-	case *syscall.SockaddrInet6:
-		var zone string
-		if sa.ZoneId != 0 {
-			if ifi, err := net.InterfaceByIndex(int(sa.ZoneId)); err == nil {
-				zone = ifi.Name
-			}
-		}
-		// if zone == "" && sa.ZoneId != 0 {
-		// }
-		a = &net.TCPAddr{
-			IP:   sa.Addr[0:],
-			Port: sa.Port,
-			Zone: zone,
-		}
-	case *syscall.SockaddrUnix:
-		a = &net.UnixAddr{Net: "unix", Name: sa.Name}
-	}
-	return a
-}
+func sockaddrToAddr(sa syscall.Sockaddr) net.Addr { _ = "STUB: not implemented"; return *new(net.Addr) }
+
+// if zone == "" && sa.ZoneId != 0 {
+// }
